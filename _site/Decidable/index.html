@@ -1,0 +1,659 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Decidable: Booleans and decision procedures | Programming Language Foundations in Agda
+</title><!-- Begin Jekyll SEO tag v2.5.0 -->
+<meta name="generator" content="Jekyll v3.7.3" />
+<meta property="og:title" content="Decidable: Booleans and decision procedures" />
+<meta name="author" content="Wen Kokke" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="Programming Language Foundations in Agda" />
+<meta property="og:description" content="Programming Language Foundations in Agda" />
+<link rel="canonical" href="https://plfa.ed.inf.ac.uk/Decidable/" />
+<meta property="og:url" content="https://plfa.ed.inf.ac.uk/Decidable/" />
+<meta property="og:site_name" content="Programming Language Foundations in Agda" />
+<script type="application/ld+json">
+{"description":"Programming Language Foundations in Agda","author":{"@type":"Person","name":"Wen Kokke"},"@type":"WebPage","url":"https://plfa.ed.inf.ac.uk/Decidable/","headline":"Decidable: Booleans and decision procedures","@context":"http://schema.org"}</script>
+<!-- End Jekyll SEO tag -->
+<link rel="stylesheet" href="/assets/main.css"><link type="application/atom+xml" rel="alternate" href="https://plfa.ed.inf.ac.uk/feed.xml" title="Programming Language Foundations in Agda
+" /></head>
+<body><header class="site-header" role="banner">
+
+    <div class="wrapper">
+
+        <a class="site-title" href="/">Programming Language Foundations in Agda
+</a>
+
+        <nav class="site-nav">
+            <span class="menu-icon">
+                <svg viewBox="0 0 18 15" width="18px" height="15px">
+                    <path fill="#424242" d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.031C17.335,0,18,0.665,18,1.484L18,1.484z"/>
+                    <path fill="#424242" d="M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0c0-0.82,0.665-1.484,1.484-1.484 h15.031C17.335,6.031,18,6.696,18,7.516L18,7.516z"/>
+                    <path fill="#424242" d="M18,13.516C18,14.335,17.335,15,16.516,15H1.484C0.665,15,0,14.335,0,13.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.031C17.335,12.031,18,12.696,18,13.516L18,13.516z"/>
+                </svg>
+            </span>
+
+            <div class="trigger">
+                <a class="page-link" href="/">Table of Contents</a>
+                <a class="page-link" href="/about/">About</a>
+            </div>
+        </nav>
+
+    </div>
+
+</header>
+<main class="page-content" aria-label="Content">
+      <div class="wrapper">
+        <article class="post">
+
+  <header class="post-header">
+    <h1 class="post-title">Decidable: Booleans and decision procedures</h1>
+  </header>
+
+  <div class="post-content">
+    <pre class="Agda"><a id="122" class="Keyword">module</a> <a id="129" href="/Decidable/" class="Module">plfa.Decidable</a> <a id="144" class="Keyword">where</a></pre>
+
+<p>We have a choice as to how to represent relations:
+as an inductive data type of <em>evidence</em> that the relation holds,
+or as a function that <em>computes</em> whether the relation holds.
+Here we explore the relation between these choices.</p>
+
+<h2 id="imports">Imports</h2>
+
+<pre class="Agda"><a id="417" class="Keyword">import</a> <a id="424" href="https://agda.github.io/agda-stdlib/Relation.Binary.PropositionalEquality.html" class="Module">Relation.Binary.PropositionalEquality</a> <a id="462" class="Symbol">as</a> <a id="465" class="Module">Eq</a>
+<a id="468" class="Keyword">open</a> <a id="473" href="https://agda.github.io/agda-stdlib/Relation.Binary.PropositionalEquality.html" class="Module">Eq</a> <a id="476" class="Keyword">using</a> <a id="482" class="Symbol">(</a><a id="483" href="https://agda.github.io/agda-stdlib/Agda.Builtin.Equality.html#83" class="Datatype Operator">_≡_</a><a id="486" class="Symbol">;</a> <a id="488" href="https://agda.github.io/agda-stdlib/Agda.Builtin.Equality.html#140" class="InductiveConstructor">refl</a><a id="492" class="Symbol">;</a> <a id="494" href="https://agda.github.io/agda-stdlib/Relation.Binary.PropositionalEquality.Core.html#560" class="Function">sym</a><a id="497" class="Symbol">;</a> <a id="499" href="https://agda.github.io/agda-stdlib/Relation.Binary.PropositionalEquality.Core.html#627" class="Function">trans</a><a id="504" class="Symbol">;</a> <a id="506" href="https://agda.github.io/agda-stdlib/Relation.Binary.PropositionalEquality.html#1075" class="Function">cong</a><a id="510" class="Symbol">)</a>
+<a id="512" class="Keyword">open</a> <a id="517" href="https://agda.github.io/agda-stdlib/Relation.Binary.PropositionalEquality.html#3861" class="Module">Eq.≡-Reasoning</a>
+<a id="532" class="Keyword">open</a> <a id="537" class="Keyword">import</a> <a id="544" href="https://agda.github.io/agda-stdlib/Data.Nat.html" class="Module">Data.Nat</a> <a id="553" class="Keyword">using</a> <a id="559" class="Symbol">(</a><a id="560" href="https://agda.github.io/agda-stdlib/Agda.Builtin.Nat.html#97" class="Datatype">ℕ</a><a id="561" class="Symbol">;</a> <a id="563" href="https://agda.github.io/agda-stdlib/Agda.Builtin.Nat.html#115" class="InductiveConstructor">zero</a><a id="567" class="Symbol">;</a> <a id="569" href="https://agda.github.io/agda-stdlib/Agda.Builtin.Nat.html#128" class="InductiveConstructor">suc</a><a id="572" class="Symbol">)</a>
+<a id="574" class="Keyword">open</a> <a id="579" class="Keyword">import</a> <a id="586" href="https://agda.github.io/agda-stdlib/Data.Product.html" class="Module">Data.Product</a> <a id="599" class="Keyword">using</a> <a id="605" class="Symbol">(</a><a id="606" href="https://agda.github.io/agda-stdlib/Data.Product.html#1329" class="Function Operator">_×_</a><a id="609" class="Symbol">)</a> <a id="611" class="Keyword">renaming</a> <a id="620" class="Symbol">(</a><a id="621" href="https://agda.github.io/agda-stdlib/Data.Product.html#543" class="InductiveConstructor Operator">_,_</a> <a id="625" class="Symbol">to</a> <a id="628" href="https://agda.github.io/agda-stdlib/Data.Product.html#543" class="InductiveConstructor Operator">⟨_,_⟩</a><a id="633" class="Symbol">)</a>
+<a id="635" class="Keyword">open</a> <a id="640" class="Keyword">import</a> <a id="647" href="https://agda.github.io/agda-stdlib/Data.Sum.html" class="Module">Data.Sum</a> <a id="656" class="Keyword">using</a> <a id="662" class="Symbol">(</a><a id="663" href="https://agda.github.io/agda-stdlib/Data.Sum.Base.html#414" class="Datatype Operator">_⊎_</a><a id="666" class="Symbol">;</a> <a id="668" href="https://agda.github.io/agda-stdlib/Data.Sum.Base.html#470" class="InductiveConstructor">inj₁</a><a id="672" class="Symbol">;</a> <a id="674" href="https://agda.github.io/agda-stdlib/Data.Sum.Base.html#495" class="InductiveConstructor">inj₂</a><a id="678" class="Symbol">)</a>
+<a id="680" class="Keyword">open</a> <a id="685" class="Keyword">import</a> <a id="692" href="https://agda.github.io/agda-stdlib/Relation.Nullary.html" class="Module">Relation.Nullary</a> <a id="709" class="Keyword">using</a> <a id="715" class="Symbol">(</a><a id="716" href="https://agda.github.io/agda-stdlib/Relation.Nullary.html#464" class="Function Operator">¬_</a><a id="718" class="Symbol">)</a>
+<a id="720" class="Keyword">open</a> <a id="725" class="Keyword">import</a> <a id="732" href="https://agda.github.io/agda-stdlib/Relation.Nullary.Negation.html" class="Module">Relation.Nullary.Negation</a> <a id="758" class="Keyword">using</a> <a id="764" class="Symbol">(</a><a id="765" href="https://agda.github.io/agda-stdlib/Relation.Nullary.Negation.html#688" class="Function">contraposition</a><a id="779" class="Symbol">)</a>
+  <a id="783" class="Keyword">renaming</a> <a id="792" class="Symbol">(</a><a id="793" href="https://agda.github.io/agda-stdlib/Relation.Nullary.Negation.html#560" class="Function">contradiction</a> <a id="807" class="Symbol">to</a> <a id="810" href="https://agda.github.io/agda-stdlib/Relation.Nullary.Negation.html#560" class="Function">¬¬-intro</a><a id="818" class="Symbol">)</a>
+<a id="820" class="Keyword">open</a> <a id="825" class="Keyword">import</a> <a id="832" href="https://agda.github.io/agda-stdlib/Data.Unit.html" class="Module">Data.Unit</a> <a id="842" class="Keyword">using</a> <a id="848" class="Symbol">(</a><a id="849" href="https://agda.github.io/agda-stdlib/Agda.Builtin.Unit.html#69" class="Record">⊤</a><a id="850" class="Symbol">;</a> <a id="852" href="https://agda.github.io/agda-stdlib/Agda.Builtin.Unit.html#106" class="InductiveConstructor">tt</a><a id="854" class="Symbol">)</a>
+<a id="856" class="Keyword">open</a> <a id="861" class="Keyword">import</a> <a id="868" href="https://agda.github.io/agda-stdlib/Data.Empty.html" class="Module">Data.Empty</a> <a id="879" class="Keyword">using</a> <a id="885" class="Symbol">(</a><a id="886" href="https://agda.github.io/agda-stdlib/Data.Empty.html#243" class="Datatype">⊥</a><a id="887" class="Symbol">;</a> <a id="889" href="https://agda.github.io/agda-stdlib/Data.Empty.html#360" class="Function">⊥-elim</a><a id="895" class="Symbol">)</a>
+<a id="897" class="Keyword">open</a> <a id="902" class="Keyword">import</a> <a id="909" href="https://agda.github.io/agda-stdlib/Data.List.html" class="Module">Data.List</a> <a id="919" class="Keyword">using</a> <a id="925" class="Symbol">(</a><a id="926" href="https://agda.github.io/agda-stdlib/Agda.Builtin.List.html#80" class="Datatype">List</a><a id="930" class="Symbol">;</a> <a id="932" href="https://agda.github.io/agda-stdlib/Data.List.Base.html#7506" class="InductiveConstructor">[]</a><a id="934" class="Symbol">;</a> <a id="936" href="https://agda.github.io/agda-stdlib/Agda.Builtin.List.html#132" class="InductiveConstructor Operator">_∷_</a><a id="939" class="Symbol">;</a> <a id="941" href="https://agda.github.io/agda-stdlib/Data.List.Base.html#2376" class="Function">foldr</a><a id="946" class="Symbol">;</a> <a id="948" href="https://agda.github.io/agda-stdlib/Data.List.Base.html#1057" class="Function">map</a><a id="951" class="Symbol">)</a>
+<a id="953" class="Keyword">open</a> <a id="958" class="Keyword">import</a> <a id="965" href="https://agda.github.io/agda-stdlib/Function.html" class="Module">Function</a> <a id="974" class="Keyword">using</a> <a id="980" class="Symbol">(</a><a id="981" href="https://agda.github.io/agda-stdlib/Function.html#759" class="Function Operator">_∘_</a><a id="984" class="Symbol">)</a></pre>
+
+<h2 id="evidence-vs-computation">Evidence vs Computation</h2>
+
+<p>Recall that Chapter <a href="/Relations/">Relations</a>
+defined comparison an inductive datatype, which provides <em>evidence</em> that one number
+is less than or equal to another.</p>
+<pre class="Agda"><a id="1241" class="Keyword">infix</a> <a id="1247" class="Number">4</a> <a id="1249" href="/Decidable/#1259" class="Datatype Operator">_≤_</a>
+
+<a id="1254" class="Keyword">data</a> <a id="_≤_"></a><a id="1259" href="/Decidable/#1259" class="Datatype Operator">_≤_</a> <a id="1263" class="Symbol">:</a> <a id="1265" href="https://agda.github.io/agda-stdlib/Agda.Builtin.Nat.html#97" class="Datatype">ℕ</a> <a id="1267" class="Symbol">→</a> <a id="1269" href="https://agda.github.io/agda-stdlib/Agda.Builtin.Nat.html#97" class="Datatype">ℕ</a> <a id="1271" class="Symbol">→</a> <a id="1273" class="PrimitiveType">Set</a> <a id="1277" class="Keyword">where</a>
+  <a id="_≤_.z≤n"></a><a id="1285" href="/Decidable/#1285" class="InductiveConstructor">z≤n</a> <a id="1289" class="Symbol">:</a> <a id="1291" class="Symbol">∀</a> <a id="1293" class="Symbol">{</a><a id="1294" href="/Decidable/#1294" class="Bound">n</a> <a id="1296" class="Symbol">:</a> <a id="1298" href="https://agda.github.io/agda-stdlib/Agda.Builtin.Nat.html#97" class="Datatype">ℕ</a><a id="1299" class="Symbol">}</a> <a id="1301" class="Symbol">→</a> <a id="1303" href="https://agda.github.io/agda-stdlib/Agda.Builtin.Nat.html#115" class="InductiveConstructor">zero</a> <a id="1308" href="/Decidable/#1259" class="Datatype Operator">≤</a> <a id="1310" href="/Decidable/#1294" class="Bound">n</a>
+  <a id="_≤_.s≤s"></a><a id="1314" href="/Decidable/#1314" class="InductiveConstructor">s≤s</a> <a id="1318" class="Symbol">:</a> <a id="1320" class="Symbol">∀</a> <a id="1322" class="Symbol">{</a><a id="1323" href="/Decidable/#1323" class="Bound">m</a> <a id="1325" href="/Decidable/#1325" class="Bound">n</a> <a id="1327" class="Symbol">:</a> <a id="1329" href="https://agda.github.io/agda-stdlib/Agda.Builtin.Nat.html#97" class="Datatype">ℕ</a><a id="1330" class="Symbol">}</a> <a id="1332" class="Symbol">→</a> <a id="1334" href="/Decidable/#1323" class="Bound">m</a> <a id="1336" href="/Decidable/#1259" class="Datatype Operator">≤</a> <a id="1338" href="/Decidable/#1325" class="Bound">n</a> <a id="1340" class="Symbol">→</a> <a id="1342" href="https://agda.github.io/agda-stdlib/Agda.Builtin.Nat.html#128" class="InductiveConstructor">suc</a> <a id="1346" href="/Decidable/#1323" class="Bound">m</a> <a id="1348" href="/Decidable/#1259" class="Datatype Operator">≤</a> <a id="1350" href="https://agda.github.io/agda-stdlib/Agda.Builtin.Nat.html#128" class="InductiveConstructor">suc</a> <a id="1354" href="/Decidable/#1325" class="Bound">n</a></pre>
+<p>For example, we can provide evidence that <code class="highlighter-rouge">2 ≤ 4</code>,
+and show there is no possible evidence that <code class="highlighter-rouge">4 ≤ 2</code>.</p>
+<pre class="Agda"><a id="2≤4"></a><a id="1484" href="/Decidable/#1484" class="Function">2≤4</a> <a id="1488" class="Symbol">:</a> <a id="1490" class="Number">2</a> <a id="1492" href="/Decidable/#1259" class="Datatype Operator">≤</a> <a id="1494" class="Number">4</a>
+<a id="1496" href="/Decidable/#1484" class="Function">2≤4</a> <a id="1500" class="Symbol">=</a> <a id="1502" href="/Decidable/#1314" class="InductiveConstructor">s≤s</a> <a id="1506" class="Symbol">(</a><a id="1507" href="/Decidable/#1314" class="InductiveConstructor">s≤s</a> <a id="1511" href="/Decidable/#1285" class="InductiveConstructor">z≤n</a><a id="1514" class="Symbol">)</a>
+
+<a id="¬4≤2"></a><a id="1517" href="/Decidable/#1517" class="Function">¬4≤2</a> <a id="1522" class="Symbol">:</a> <a id="1524" href="https://agda.github.io/agda-stdlib/Relation.Nullary.html#464" class="Function Operator">¬</a> <a id="1526" class="Symbol">(</a><a id="1527" class="Number">4</a> <a id="1529" href="/Decidable/#1259" class="Datatype Operator">≤</a> <a id="1531" class="Number">2</a><a id="1532" class="Symbol">)</a>
+<a id="1534" href="/Decidable/#1517" class="Function">¬4≤2</a> <a id="1539" class="Symbol">(</a><a id="1540" href="/Decidable/#1314" class="InductiveConstructor">s≤s</a> <a id="1544" class="Symbol">(</a><a id="1545" href="/Decidable/#1314" class="InductiveConstructor">s≤s</a> <a id="1549" class="Symbol">()))</a></pre>
+<p>The occurrence of <code class="highlighter-rouge">()</code> attests to the fact that there is
+no possible evidence for <code class="highlighter-rouge">2 ≤ 0</code>, which <code class="highlighter-rouge">z≤n</code> cannot match
+(because <code class="highlighter-rouge">2</code> is not <code class="highlighter-rouge">zero</code>) and <code class="highlighter-rouge">s≤s</code> cannot match
+(because <code class="highlighter-rouge">0</code> cannot match <code class="highlighter-rouge">suc n</code>).</p>
+
+<p>An alternative, which may seem more familiar, is to define a
+type of booleans.</p>
+<pre class="Agda"><a id="1861" class="Keyword">data</a> <a id="Bool"></a><a id="1866" href="/Decidable/#1866" class="Datatype">Bool</a> <a id="1871" class="Symbol">:</a> <a id="1873" class="PrimitiveType">Set</a> <a id="1877" class="Keyword">where</a>
+  <a id="Bool.true"></a><a id="1885" href="/Decidable/#1885" class="InductiveConstructor">true</a>  <a id="1891" class="Symbol">:</a> <a id="1893" href="/Decidable/#1866" class="Datatype">Bool</a>
+  <a id="Bool.false"></a><a id="1900" href="/Decidable/#1900" class="InductiveConstructor">false</a> <a id="1906" class="Symbol">:</a> <a id="1908" href="/Decidable/#1866" class="Datatype">Bool</a></pre>
+<p>Given booleans, we can define a function of two numbers that
+<em>computes</em> to <code class="highlighter-rouge">true</code> if the comparison holds and to <code class="highlighter-rouge">false</code> otherwise.</p>
+<pre class="Agda"><a id="2069" class="Keyword">infix</a> <a id="2075" class="Number">4</a> <a id="2077" href="/Decidable/#2083" class="Function Operator">_≤ᵇ_</a>
+
+<a id="_≤ᵇ_"></a><a id="2083" href="/Decidable/#2083" class="Function Operator">_≤ᵇ_</a> <a id="2088" class="Symbol">:</a> <a id="2090" href="https://agda.github.io/agda-stdlib/Agda.Builtin.Nat.html#97" class="Datatype">ℕ</a> <a id="2092" class="Symbol">→</a> <a id="2094" href="https://agda.github.io/agda-stdlib/Agda.Builtin.Nat.html#97" class="Datatype">ℕ</a> <a id="2096" class="Symbol">→</a> <a id="2098" href="/Decidable/#1866" class="Datatype">Bool</a>
+<a id="2103" href="https://agda.github.io/agda-stdlib/Agda.Builtin.Nat.html#115" class="InductiveConstructor">zero</a> <a id="2108" href="/Decidable/#2083" class="Function Operator">≤ᵇ</a> <a id="2111" href="/Decidable/#2111" class="Bound">n</a>       <a id="2119" class="Symbol">=</a>  <a id="2122" href="/Decidable/#1885" class="InductiveConstructor">true</a>
+<a id="2127" href="https://agda.github.io/agda-stdlib/Agda.Builtin.Nat.html#128" class="InductiveConstructor">suc</a> <a id="2131" href="/Decidable/#2131" class="Bound">m</a> <a id="2133" href="/Decidable/#2083" class="Function Operator">≤ᵇ</a> <a id="2136" href="https://agda.github.io/agda-stdlib/Agda.Builtin.Nat.html#115" class="InductiveConstructor">zero</a>   <a id="2143" class="Symbol">=</a>  <a id="2146" href="/Decidable/#1900" class="InductiveConstructor">false</a>
+<a id="2152" href="https://agda.github.io/agda-stdlib/Agda.Builtin.Nat.html#128" class="InductiveConstructor">suc</a> <a id="2156" href="/Decidable/#2156" class="Bound">m</a> <a id="2158" href="/Decidable/#2083" class="Function Operator">≤ᵇ</a> <a id="2161" href="https://agda.github.io/agda-stdlib/Agda.Builtin.Nat.html#128" class="InductiveConstructor">suc</a> <a id="2165" href="/Decidable/#2165" class="Bound">n</a>  <a id="2168" class="Symbol">=</a>  <a id="2171" href="/Decidable/#2156" class="Bound">m</a> <a id="2173" href="/Decidable/#2083" class="Function Operator">≤ᵇ</a> <a id="2176" href="/Decidable/#2165" class="Bound">n</a></pre>
+<p>The first and last clauses of this definition resemble the two
+constructors of the corresponding inductive datatype, while the
+middle clause arises because there is no possible evidence that
+<code class="highlighter-rouge">suc m ≤ zero</code> for any <code class="highlighter-rouge">m</code>.
+For example, we can compute that <code class="highlighter-rouge">2 ≤ 4</code> holds,
+and we can compute that <code class="highlighter-rouge">4 ≤ 2</code> does not hold.</p>
+<pre class="Agda"><a id="2516" href="/Decidable/#2516" class="Function">_</a> <a id="2518" class="Symbol">:</a> <a id="2520" class="Symbol">(</a><a id="2521" class="Number">2</a> <a id="2523" href="/Decidable/#2083" class="Function Operator">≤ᵇ</a> <a id="2526" class="Number">4</a><a id="2527" class="Symbol">)</a> <a id="2529" href="https://agda.github.io/agda-stdlib/Agda.Builtin.Equality.html#83" class="Datatype Operator">≡</a> <a id="2531" href="/Decidable/#1885" class="InductiveConstructor">true</a>
+<a id="2536" class="Symbol">_</a> <a id="2538" class="Symbol">=</a>
+  <a id="2542" href="https://agda.github.io/agda-stdlib/Relation.Binary.PropositionalEquality.html#3962" class="Function Operator">begin</a>
+    <a id="2552" class="Number">2</a> <a id="2554" href="/Decidable/#2083" class="Function Operator">≤ᵇ</a> <a id="2557" class="Number">4</a>
+  <a id="2561" href="https://agda.github.io/agda-stdlib/Relation.Binary.PropositionalEquality.html#4020" class="Function Operator">≡⟨⟩</a>
+    <a id="2569" class="Number">1</a> <a id="2571" href="/Decidable/#2083" class="Function Operator">≤ᵇ</a> <a id="2574" class="Number">3</a>
+  <a id="2578" href="https://agda.github.io/agda-stdlib/Relation.Binary.PropositionalEquality.html#4020" class="Function Operator">≡⟨⟩</a>
+    <a id="2586" class="Number">0</a> <a id="2588" href="/Decidable/#2083" class="Function Operator">≤ᵇ</a> <a id="2591" class="Number">2</a>
+  <a id="2595" href="https://agda.github.io/agda-stdlib/Relation.Binary.PropositionalEquality.html#4020" class="Function Operator">≡⟨⟩</a>
+    <a id="2603" href="/Decidable/#1885" class="InductiveConstructor">true</a>
+  <a id="2610" href="https://agda.github.io/agda-stdlib/Relation.Binary.PropositionalEquality.html#4260" class="Function Operator">∎</a>
+
+<a id="2613" href="/Decidable/#2613" class="Function">_</a> <a id="2615" class="Symbol">:</a> <a id="2617" class="Symbol">(</a><a id="2618" class="Number">4</a> <a id="2620" href="/Decidable/#2083" class="Function Operator">≤ᵇ</a> <a id="2623" class="Number">2</a><a id="2624" class="Symbol">)</a> <a id="2626" href="https://agda.github.io/agda-stdlib/Agda.Builtin.Equality.html#83" class="Datatype Operator">≡</a> <a id="2628" href="/Decidable/#1900" class="InductiveConstructor">false</a>
+<a id="2634" class="Symbol">_</a> <a id="2636" class="Symbol">=</a>
+  <a id="2640" href="https://agda.github.io/agda-stdlib/Relation.Binary.PropositionalEquality.html#3962" class="Function Operator">begin</a>
+    <a id="2650" class="Number">4</a> <a id="2652" href="/Decidable/#2083" class="Function Operator">≤ᵇ</a> <a id="2655" class="Number">2</a>
+  <a id="2659" href="https://agda.github.io/agda-stdlib/Relation.Binary.PropositionalEquality.html#4020" class="Function Operator">≡⟨⟩</a>
+    <a id="2667" class="Number">3</a> <a id="2669" href="/Decidable/#2083" class="Function Operator">≤ᵇ</a> <a id="2672" class="Number">1</a>
+  <a id="2676" href="https://agda.github.io/agda-stdlib/Relation.Binary.PropositionalEquality.html#4020" class="Function Operator">≡⟨⟩</a>
+    <a id="2684" class="Number">2</a> <a id="2686" href="/Decidable/#2083" class="Function Operator">≤ᵇ</a> <a id="2689" class="Number">0</a>
+  <a id="2693" href="https://agda.github.io/agda-stdlib/Relation.Binary.PropositionalEquality.html#4020" class="Function Operator">≡⟨⟩</a>
+    <a id="2701" href="/Decidable/#1900" class="InductiveConstructor">false</a>
+  <a id="2709" href="https://agda.github.io/agda-stdlib/Relation.Binary.PropositionalEquality.html#4260" class="Function Operator">∎</a></pre>
+<p>In the first case, it takes two steps to reduce the first argument to zero,
+and one more step to compute true, corresponding to the two uses of <code class="highlighter-rouge">s≤s</code>
+and the one use of <code class="highlighter-rouge">z≤n</code> when providing evidence that <code class="highlighter-rouge">2 ≤ 4</code>.
+In the second case, it takes two steps to reduce the second argument to zero,
+and one more step to compute false, corresponding to the two uses of <code class="highlighter-rouge">s≤s</code>
+and the one use of <code class="highlighter-rouge">()</code> when showing there can be no evidence that <code class="highlighter-rouge">4 ≤ 2</code>.</p>
+
+<h2 id="relating-evidence-and-computation">Relating evidence and computation</h2>
+
+<p>We would hope to be able to show these two approaches are related, and
+indeed we can.  First, we define a function that lets us map from the
+computation world to the evidence world.</p>
+<pre class="Agda"><a id="T"></a><a id="3398" href="/Decidable/#3398" class="Function">T</a> <a id="3400" class="Symbol">:</a> <a id="3402" href="/Decidable/#1866" class="Datatype">Bool</a> <a id="3407" class="Symbol">→</a> <a id="3409" class="PrimitiveType">Set</a>
+<a id="3413" href="/Decidable/#3398" class="Function">T</a> <a id="3415" href="/Decidable/#1885" class="InductiveConstructor">true</a> <a id="3420" class="Symbol">=</a> <a id="3422" href="https://agda.github.io/agda-stdlib/Agda.Builtin.Unit.html#69" class="Record">⊤</a>
+<a id="3424" href="/Decidable/#3398" class="Function">T</a> <a id="3426" href="/Decidable/#1900" class="InductiveConstructor">false</a> <a id="3432" class="Symbol">=</a> <a id="3434" href="https://agda.github.io/agda-stdlib/Data.Empty.html#243" class="Datatype">⊥</a></pre>
+<p>Recall that <code class="highlighter-rouge">⊤</code> is the unit type which contains the single element <code class="highlighter-rouge">tt</code>,
+and the <code class="highlighter-rouge">⊥</code> is the empty type which contains no values.  (Also note that
+<code class="highlighter-rouge">T</code> is a capital letter t, and distinct from <code class="highlighter-rouge">⊤</code>.)  If <code class="highlighter-rouge">b</code> is of type <code class="highlighter-rouge">Bool</code>,
+then <code class="highlighter-rouge">tt</code> provides evidence that <code class="highlighter-rouge">T b</code> holds if <code class="highlighter-rouge">b</code> is true, while there is
+no possible evidence that <code class="highlighter-rouge">T b</code> holds if <code class="highlighter-rouge">b</code> is false.</p>
+
+<p>Another way to put this is that <code class="highlighter-rouge">T b</code> is inhabited exactly when <code class="highlighter-rouge">b ≡ true</code>
+is inhabited.
+In the forward direction, we need to do a case analysis on the boolean <code class="highlighter-rouge">b</code>.</p>
+<pre class="Agda"><a id="T→≡"></a><a id="3981" href="/Decidable/#3981" class="Function">T→≡</a> <a id="3985" class="Symbol">:</a> <a id="3987" class="Symbol">∀</a> <a id="3989" class="Symbol">(</a><a id="3990" href="/Decidable/#3990" class="Bound">b</a> <a id="3992" class="Symbol">:</a> <a id="3994" href="/Decidable/#1866" class="Datatype">Bool</a><a id="3998" class="Symbol">)</a> <a id="4000" class="Symbol">→</a> <a id="4002" href="/Decidable/#3398" class="Function">T</a> <a id="4004" href="/Decidable/#3990" class="Bound">b</a> <a id="4006" class="Symbol">→</a> <a id="4008" href="/Decidable/#3990" class="Bound">b</a> <a id="4010" href="https://agda.github.io/agda-stdlib/Agda.Builtin.Equality.html#83" class="Datatype Operator">≡</a> <a id="4012" href="/Decidable/#1885" class="InductiveConstructor">true</a>
+<a id="4017" href="/Decidable/#3981" class="Function">T→≡</a> <a id="4021" href="/Decidable/#1885" class="InductiveConstructor">true</a> <a id="4026" href="https://agda.github.io/agda-stdlib/Agda.Builtin.Unit.html#106" class="InductiveConstructor">tt</a> <a id="4029" class="Symbol">=</a> <a id="4031" href="https://agda.github.io/agda-stdlib/Agda.Builtin.Equality.html#140" class="InductiveConstructor">refl</a>
+<a id="4036" href="/Decidable/#3981" class="Function">T→≡</a> <a id="4040" href="/Decidable/#1900" class="InductiveConstructor">false</a> <a id="4046" class="Symbol">()</a></pre>
+<p>If <code class="highlighter-rouge">b</code> is true then <code class="highlighter-rouge">T b</code> is inhabited by <code class="highlighter-rouge">tt</code> and <code class="highlighter-rouge">b ≡ true</code> is inhabited
+by <code class="highlighter-rouge">refl</code>, while if <code class="highlighter-rouge">b</code> is false then <code class="highlighter-rouge">T b</code> in uninhabited.</p>
+
+<p>In the reverse direction, there is no need for a case analysis.</p>
+<pre class="Agda"><a id="≡→T"></a><a id="4273" href="/Decidable/#4273" class="Function">≡→T</a> <a id="4277" class="Symbol">:</a> <a id="4279" class="Symbol">∀</a> <a id="4281" class="Symbol">{</a><a id="4282" href="/Decidable/#4282" class="Bound">b</a> <a id="4284" class="Symbol">:</a> <a id="4286" href="/Decidable/#1866" class="Datatype">Bool</a><a id="4290" class="Symbol">}</a> <a id="4292" class="Symbol">→</a> <a id="4294" href="/Decidable/#4282" class="Bound">b</a> <a id="4296" href="https://agda.github.io/agda-stdlib/Agda.Builtin.Equality.html#83" class="Datatype Operator">≡</a> <a id="4298" href="/Decidable/#1885" class="InductiveConstructor">true</a> <a id="4303" class="Symbol">→</a> <a id="4305" href="/Decidable/#3398" class="Function">T</a> <a id="4307" href="/Decidable/#4282" class="Bound">b</a>
+<a id="4309" href="/Decidable/#4273" class="Function">≡→T</a> <a id="4313" href="https://agda.github.io/agda-stdlib/Agda.Builtin.Equality.html#140" class="InductiveConstructor">refl</a> <a id="4318" class="Symbol">=</a> <a id="4320" href="https://agda.github.io/agda-stdlib/Agda.Builtin.Unit.html#106" class="InductiveConstructor">tt</a></pre>
+<p>If <code class="highlighter-rouge">b ≡ true</code> is inhabited by <code class="highlighter-rouge">refl</code> we know that <code class="highlighter-rouge">b</code> is <code class="highlighter-rouge">true</code> and
+hence <code class="highlighter-rouge">T b</code> is inhabited by <code class="highlighter-rouge">tt</code>.</p>
+
+<p>Now we can show that <code class="highlighter-rouge">T (m ≤ᵇ n)</code> is inhabited exactly when <code class="highlighter-rouge">m ≤ n</code> is inhabited.</p>
+
+<p>In the forward direction, we consider the three clauses in the definition
+of <code class="highlighter-rouge">_≤ᵇ_</code>.</p>
+<pre class="Agda"><a id="≤ᵇ→≤"></a><a id="4618" href="/Decidable/#4618" class="Function">≤ᵇ→≤</a> <a id="4623" class="Symbol">:</a> <a id="4625" class="Symbol">∀</a> <a id="4627" class="Symbol">(</a><a id="4628" href="/Decidable/#4628" class="Bound">m</a> <a id="4630" href="/Decidable/#4630" class="Bound">n</a> <a id="4632" class="Symbol">:</a> <a id="4634" href="https://agda.github.io/agda-stdlib/Agda.Builtin.Nat.html#97" class="Datatype">ℕ</a><a id="4635" class="Symbol">)</a> <a id="4637" class="Symbol">→</a> <a id="4639" href="/Decidable/#3398" class="Function">T</a> <a id="4641" class="Symbol">(</a><a id="4642" href="/Decidable/#4628" class="Bound">m</a> <a id="4644" href="/Decidable/#2083" class="Function Operator">≤ᵇ</a> <a id="4647" href="/Decidable/#4630" class="Bound">n</a><a id="4648" class="Symbol">)</a> <a id="4650" class="Symbol">→</a> <a id="4652" href="/Decidable/#4628" class="Bound">m</a> <a id="4654" href="/Decidable/#1259" class="Datatype Operator">≤</a> <a id="4656" href="/Decidable/#4630" class="Bound">n</a>
+<a id="4658" href="/Decidable/#4618" class="Function">≤ᵇ→≤</a> <a id="4663" href="https://agda.github.io/agda-stdlib/Agda.Builtin.Nat.html#115" class="InductiveConstructor">zero</a> <a id="4668" href="/Decidable/#4668" class="Bound">n</a> <a id="4670" href="https://agda.github.io/agda-stdlib/Agda.Builtin.Unit.html#106" class="InductiveConstructor">tt</a> <a id="4673" class="Symbol">=</a> <a id="4675" href="/Decidable/#1285" class="InductiveConstructor">z≤n</a>
+<a id="4679" href="/Decidable/#4618" class="Function">≤ᵇ→≤</a> <a id="4684" class="Symbol">(</a><a id="4685" href="https://agda.github.io/agda-stdlib/Agda.Builtin.Nat.html#128" class="InductiveConstructor">suc</a> <a id="4689" href="/Decidable/#4689" class="Bound">m</a><a id="4690" class="Symbol">)</a> <a id="4692" href="https://agda.github.io/agda-stdlib/Agda.Builtin.Nat.html#115" class="InductiveConstructor">zero</a> <a id="4697" class="Symbol">()</a>
+<a id="4700" href="/Decidable/#4618" class="Function">≤ᵇ→≤</a> <a id="4705" class="Symbol">(</a><a id="4706" href="https://agda.github.io/agda-stdlib/Agda.Builtin.Nat.html#128" class="InductiveConstructor">suc</a> <a id="4710" href="/Decidable/#4710" class="Bound">m</a><a id="4711" class="Symbol">)</a> <a id="4713" class="Symbol">(</a><a id="4714" href="https://agda.github.io/agda-stdlib/Agda.Builtin.Nat.html#128" class="InductiveConstructor">suc</a> <a id="4718" href="/Decidable/#4718" class="Bound">n</a><a id="4719" class="Symbol">)</a> <a id="4721" href="/Decidable/#4721" class="Bound">t</a> <a id="4723" class="Symbol">=</a>  <a id="4726" href="/Decidable/#1314" class="InductiveConstructor">s≤s</a> <a id="4730" class="Symbol">(</a><a id="4731" href="/Decidable/#4618" class="Function">≤ᵇ→≤</a> <a id="4736" href="/Decidable/#4710" class="Bound">m</a> <a id="4738" href="/Decidable/#4718" class="Bound">n</a> <a id="4740" href="/Decidable/#4721" class="Bound">t</a><a id="4741" class="Symbol">)</a></pre>
+<p>In the first clause, we immediately have that <code class="highlighter-rouge">zero ≤ᵇ n</code> is
+true, so <code class="highlighter-rouge">T (m ≤ᵇ n)</code> is evidenced by <code class="highlighter-rouge">tt</code>, and correspondingly <code class="highlighter-rouge">m ≤ n</code> is
+evidenced by <code class="highlighter-rouge">z≤n</code>. In the middle clause, we immediately have that
+<code class="highlighter-rouge">suc m ≤ᵇ zero</code> is false, and hence <code class="highlighter-rouge">T (m ≤ᵇ n)</code> is empty, so we need
+not provide evidence that <code class="highlighter-rouge">m ≤ n</code>, which is just as well since there is no
+such evidence.  In the last clause, we have the <code class="highlighter-rouge">suc m ≤ suc n</code> recurses
+to <code class="highlighter-rouge">m ≤ n</code> and we let <code class="highlighter-rouge">t</code> be the evidence of <code class="highlighter-rouge">T (m ≤ᵇ n)</code> if it exists.
+We recursively invoke the function to get evidence that <code class="highlighter-rouge">m ≤ n</code>, which
+<code class="highlighter-rouge">s≤s</code> converts to evidence that <code class="highlighter-rouge">suc m ≤ suc n</code>.</p>
+
+<p>In the reverse direction, we consider the possible forms of evidence
+that <code class="highlighter-rouge">m ≤ n</code>.</p>
+<pre class="Agda"><a id="≤→≤ᵇ"></a><a id="5464" href="/Decidable/#5464" class="Function">≤→≤ᵇ</a> <a id="5469" class="Symbol">:</a> <a id="5471" class="Symbol">∀</a> <a id="5473" class="Symbol">{</a><a id="5474" href="/Decidable/#5474" class="Bound">m</a> <a id="5476" href="/Decidable/#5476" class="Bound">n</a> <a id="5478" class="Symbol">:</a> <a id="5480" href="https://agda.github.io/agda-stdlib/Agda.Builtin.Nat.html#97" class="Datatype">ℕ</a><a id="5481" class="Symbol">}</a> <a id="5483" class="Symbol">→</a> <a id="5485" href="/Decidable/#5474" class="Bound">m</a> <a id="5487" href="/Decidable/#1259" class="Datatype Operator">≤</a> <a id="5489" href="/Decidable/#5476" class="Bound">n</a> <a id="5491" class="Symbol">→</a> <a id="5493" href="/Decidable/#3398" class="Function">T</a> <a id="5495" class="Symbol">(</a><a id="5496" href="/Decidable/#5474" class="Bound">m</a> <a id="5498" href="/Decidable/#2083" class="Function Operator">≤ᵇ</a> <a id="5501" href="/Decidable/#5476" class="Bound">n</a><a id="5502" class="Symbol">)</a>
+<a id="5504" href="/Decidable/#5464" class="Function">≤→≤ᵇ</a> <a id="5509" href="/Decidable/#1285" class="InductiveConstructor">z≤n</a> <a id="5513" class="Symbol">=</a> <a id="5515" href="https://agda.github.io/agda-stdlib/Agda.Builtin.Unit.html#106" class="InductiveConstructor">tt</a>
+<a id="5518" href="/Decidable/#5464" class="Function">≤→≤ᵇ</a> <a id="5523" class="Symbol">(</a><a id="5524" href="/Decidable/#1314" class="InductiveConstructor">s≤s</a> <a id="5528" href="/Decidable/#5528" class="Bound">m≤n</a><a id="5531" class="Symbol">)</a> <a id="5533" class="Symbol">=</a> <a id="5535" href="/Decidable/#5464" class="Function">≤→≤ᵇ</a> <a id="5540" href="/Decidable/#5528" class="Bound">m≤n</a></pre>
+<p>If the evidence is <code class="highlighter-rouge">z≤n</code> then we immediately have that <code class="highlighter-rouge">zero ≤ᵇ n</code> is
+true, so <code class="highlighter-rouge">T (m ≤ᵇ n)</code> is evidenced by <code class="highlighter-rouge">tt</code>. If the evidence is <code class="highlighter-rouge">s≤s</code>
+applied to <code class="highlighter-rouge">m≤n</code>, then <code class="highlighter-rouge">suc m ≤ᵇ suc n</code> reduces to <code class="highlighter-rouge">m ≤ᵇ n</code>, and we
+may recursively invoke the function to produce evidence that <code class="highlighter-rouge">T (m ≤ᵇ n)</code>.</p>
+
+<p>The forward proof has one more clause than the reverse proof,
+precisely because in the forward proof we need clauses corresponding to
+the comparison yielding both true and false, while in the reverse proof
+we only need clauses corresponding to the case where there is evidence
+that the comparision holds.  This is exactly why we tend to prefer the
+evidence formulation to the computation formulation, because it allows
+us to do less work: we consider only cases where the relation holds,
+and can ignore those where it does not.</p>
+
+<p>On the other hand, sometimes the computation formulation may be just what
+we want.  Given a non-obvious relation over large values, it might be
+handy to have the computer work out the answer for us.  Fortunately,
+rather than choosing between <em>evidence</em> and <em>computation</em>,
+there is a way to get the benefits of both.</p>
+
+<h2 id="the-best-of-both-worlds">The best of both worlds</h2>
+
+<p>A function that returns a boolean returns exactly a single bit of information:
+does the relation hold or does it not? Conversely, the evidence approach tells
+us exactly why the relation holds, but we are responsible for generating the
+evidence.  But it is easy to define a type that combines the benefits of
+both approaches.  It is called <code class="highlighter-rouge">Dec A</code>, where <code class="highlighter-rouge">Dec</code> is short for <em>decidable</em>.</p>
+<pre class="Agda"><a id="7111" class="Keyword">data</a> <a id="Dec"></a><a id="7116" href="/Decidable/#7116" class="Datatype">Dec</a> <a id="7120" class="Symbol">(</a><a id="7121" href="/Decidable/#7121" class="Bound">A</a> <a id="7123" class="Symbol">:</a> <a id="7125" class="PrimitiveType">Set</a><a id="7128" class="Symbol">)</a> <a id="7130" class="Symbol">:</a> <a id="7132" class="PrimitiveType">Set</a> <a id="7136" class="Keyword">where</a>
+  <a id="Dec.yes"></a><a id="7144" href="/Decidable/#7144" class="InductiveConstructor">yes</a> <a id="7148" class="Symbol">:</a> <a id="7150" href="/Decidable/#7121" class="Bound">A</a> <a id="7152" class="Symbol">→</a> <a id="7154" href="/Decidable/#7116" class="Datatype">Dec</a> <a id="7158" href="/Decidable/#7121" class="Bound">A</a>
+  <a id="Dec.no"></a><a id="7162" href="/Decidable/#7162" class="InductiveConstructor">no</a> <a id="7165" class="Symbol">:</a> <a id="7167" href="https://agda.github.io/agda-stdlib/Relation.Nullary.html#464" class="Function Operator">¬</a> <a id="7169" href="/Decidable/#7121" class="Bound">A</a> <a id="7171" class="Symbol">→</a> <a id="7173" href="/Decidable/#7116" class="Datatype">Dec</a> <a id="7177" href="/Decidable/#7121" class="Bound">A</a></pre>
+<p>Like booleans, the type has two constructors.  A value of type <code class="highlighter-rouge">Dec A</code>
+is either of the form <code class="highlighter-rouge">yes x</code>, where <code class="highlighter-rouge">x</code> provides evidence that <code class="highlighter-rouge">A</code> holds,
+or of the form <code class="highlighter-rouge">no ¬x</code>, where <code class="highlighter-rouge">¬x</code> provides evidence that <code class="highlighter-rouge">A</code> cannot hold
+(that is, <code class="highlighter-rouge">¬x</code> is a function which given evidence of <code class="highlighter-rouge">A</code> yields a contradiction).</p>
+
+<p>For example, here is a function which given two numbers decides whether one
+is less than or equal to the other, and provides evidence to justify its conclusion.</p>
+
+<p>First, we introduce two functions useful for constructing evidence that
+an inequality does not hold.</p>
+<pre class="Agda"><a id="¬s≤z"></a><a id="7769" href="/Decidable/#7769" class="Function">¬s≤z</a> <a id="7774" class="Symbol">:</a> <a id="7776" class="Symbol">∀</a> <a id="7778" class="Symbol">{</a><a id="7779" href="/Decidable/#7779" class="Bound">m</a> <a id="7781" class="Symbol">:</a> <a id="7783" href="https://agda.github.io/agda-stdlib/Agda.Builtin.Nat.html#97" class="Datatype">ℕ</a><a id="7784" class="Symbol">}</a> <a id="7786" class="Symbol">→</a> <a id="7788" href="https://agda.github.io/agda-stdlib/Relation.Nullary.html#464" class="Function Operator">¬</a> <a id="7790" class="Symbol">(</a><a id="7791" href="https://agda.github.io/agda-stdlib/Agda.Builtin.Nat.html#128" class="InductiveConstructor">suc</a> <a id="7795" href="/Decidable/#7779" class="Bound">m</a> <a id="7797" href="/Decidable/#1259" class="Datatype Operator">≤</a> <a id="7799" href="https://agda.github.io/agda-stdlib/Agda.Builtin.Nat.html#115" class="InductiveConstructor">zero</a><a id="7803" class="Symbol">)</a>
+<a id="7805" href="/Decidable/#7769" class="Function">¬s≤z</a> <a id="7810" class="Symbol">()</a>
+
+<a id="¬s≤s"></a><a id="7814" href="/Decidable/#7814" class="Function">¬s≤s</a> <a id="7819" class="Symbol">:</a> <a id="7821" class="Symbol">∀</a> <a id="7823" class="Symbol">{</a><a id="7824" href="/Decidable/#7824" class="Bound">m</a> <a id="7826" href="/Decidable/#7826" class="Bound">n</a> <a id="7828" class="Symbol">:</a> <a id="7830" href="https://agda.github.io/agda-stdlib/Agda.Builtin.Nat.html#97" class="Datatype">ℕ</a><a id="7831" class="Symbol">}</a> <a id="7833" class="Symbol">→</a> <a id="7835" href="https://agda.github.io/agda-stdlib/Relation.Nullary.html#464" class="Function Operator">¬</a> <a id="7837" class="Symbol">(</a><a id="7838" href="/Decidable/#7824" class="Bound">m</a> <a id="7840" href="/Decidable/#1259" class="Datatype Operator">≤</a> <a id="7842" href="/Decidable/#7826" class="Bound">n</a><a id="7843" class="Symbol">)</a> <a id="7845" class="Symbol">→</a> <a id="7847" href="https://agda.github.io/agda-stdlib/Relation.Nullary.html#464" class="Function Operator">¬</a> <a id="7849" class="Symbol">(</a><a id="7850" href="https://agda.github.io/agda-stdlib/Agda.Builtin.Nat.html#128" class="InductiveConstructor">suc</a> <a id="7854" href="/Decidable/#7824" class="Bound">m</a> <a id="7856" href="/Decidable/#1259" class="Datatype Operator">≤</a> <a id="7858" href="https://agda.github.io/agda-stdlib/Agda.Builtin.Nat.html#128" class="InductiveConstructor">suc</a> <a id="7862" href="/Decidable/#7826" class="Bound">n</a><a id="7863" class="Symbol">)</a>
+<a id="7865" href="/Decidable/#7814" class="Function">¬s≤s</a> <a id="7870" href="/Decidable/#7870" class="Bound">¬m≤n</a> <a id="7875" class="Symbol">(</a><a id="7876" href="/Decidable/#1314" class="InductiveConstructor">s≤s</a> <a id="7880" href="/Decidable/#7880" class="Bound">m≤n</a><a id="7883" class="Symbol">)</a> <a id="7885" class="Symbol">=</a> <a id="7887" href="/Decidable/#7870" class="Bound">¬m≤n</a> <a id="7892" href="/Decidable/#7880" class="Bound">m≤n</a></pre>
+<p>The first of these asserts that <code class="highlighter-rouge">¬ (suc m ≤ zero)</code>, and follows by
+absurdity, since any evidence of inequality has the form <code class="highlighter-rouge">zero ≤ n</code>
+or <code class="highlighter-rouge">suc m ≤ suc n</code>, neither of which match <code class="highlighter-rouge">suc m ≤ suc n</code>. The second
+of these takes evidence <code class="highlighter-rouge">¬m≤n</code> of <code class="highlighter-rouge">¬ (m ≤ n)</code> and returns a proof of
+<code class="highlighter-rouge">¬ (suc m ≤ suc n)</code>.  Any evidence of <code class="highlighter-rouge">suc m ≤ suc n</code> must have the
+form <code class="highlighter-rouge">s≤s m≤n</code> where <code class="highlighter-rouge">m≤n</code> is evidence that <code class="highlighter-rouge">m ≤ n</code>.  Hence, we have
+a contradiction, evidenced by <code class="highlighter-rouge">¬m≤n m≤n</code>.</p>
+
+<p>Using these, it is straightforward to decide an inequality.</p>
+<pre class="Agda"><a id="_≤?_"></a><a id="8435" href="/Decidable/#8435" class="Function Operator">_≤?_</a> <a id="8440" class="Symbol">:</a> <a id="8442" class="Symbol">∀</a> <a id="8444" class="Symbol">(</a><a id="8445" href="/Decidable/#8445" class="Bound">m</a> <a id="8447" href="/Decidable/#8447" class="Bound">n</a> <a id="8449" class="Symbol">:</a> <a id="8451" href="https://agda.github.io/agda-stdlib/Agda.Builtin.Nat.html#97" class="Datatype">ℕ</a><a id="8452" class="Symbol">)</a> <a id="8454" class="Symbol">→</a> <a id="8456" href="/Decidable/#7116" class="Datatype">Dec</a> <a id="8460" class="Symbol">(</a><a id="8461" href="/Decidable/#8445" class="Bound">m</a> <a id="8463" href="/Decidable/#1259" class="Datatype Operator">≤</a> <a id="8465" href="/Decidable/#8447" class="Bound">n</a><a id="8466" class="Symbol">)</a>
+<a id="8468" href="https://agda.github.io/agda-stdlib/Agda.Builtin.Nat.html#115" class="InductiveConstructor">zero</a> <a id="8473" href="/Decidable/#8435" class="Function Operator">≤?</a> <a id="8476" href="/Decidable/#8476" class="Bound">n</a> <a id="8478" class="Symbol">=</a> <a id="8480" href="/Decidable/#7144" class="InductiveConstructor">yes</a> <a id="8484" href="/Decidable/#1285" class="InductiveConstructor">z≤n</a>
+<a id="8488" href="https://agda.github.io/agda-stdlib/Agda.Builtin.Nat.html#128" class="InductiveConstructor">suc</a> <a id="8492" href="/Decidable/#8492" class="Bound">m</a> <a id="8494" href="/Decidable/#8435" class="Function Operator">≤?</a> <a id="8497" href="https://agda.github.io/agda-stdlib/Agda.Builtin.Nat.html#115" class="InductiveConstructor">zero</a> <a id="8502" class="Symbol">=</a> <a id="8504" href="/Decidable/#7162" class="InductiveConstructor">no</a> <a id="8507" href="/Decidable/#7769" class="Function">¬s≤z</a>
+<a id="8512" href="https://agda.github.io/agda-stdlib/Agda.Builtin.Nat.html#128" class="InductiveConstructor">suc</a> <a id="8516" href="/Decidable/#8516" class="Bound">m</a> <a id="8518" href="/Decidable/#8435" class="Function Operator">≤?</a> <a id="8521" href="https://agda.github.io/agda-stdlib/Agda.Builtin.Nat.html#128" class="InductiveConstructor">suc</a> <a id="8525" href="/Decidable/#8525" class="Bound">n</a> <a id="8527" class="Keyword">with</a> <a id="8532" href="/Decidable/#8516" class="Bound">m</a> <a id="8534" href="/Decidable/#8435" class="Function Operator">≤?</a> <a id="8537" href="/Decidable/#8525" class="Bound">n</a>
+<a id="8539" class="Symbol">...</a> <a id="8543" class="Symbol">|</a> <a id="8545" href="/Decidable/#7144" class="InductiveConstructor">yes</a> <a id="8549" href="/Decidable/#8549" class="Bound">m≤n</a> <a id="8553" class="Symbol">=</a> <a id="8555" href="/Decidable/#7144" class="InductiveConstructor">yes</a> <a id="8559" class="Symbol">(</a><a id="8560" href="/Decidable/#1314" class="InductiveConstructor">s≤s</a> <a id="8564" href="/Decidable/#8549" class="Bound">m≤n</a><a id="8567" class="Symbol">)</a>
+<a id="8569" class="Symbol">...</a> <a id="8573" class="Symbol">|</a> <a id="8575" href="/Decidable/#7162" class="InductiveConstructor">no</a> <a id="8578" href="/Decidable/#8578" class="Bound">¬m≤n</a> <a id="8583" class="Symbol">=</a> <a id="8585" href="/Decidable/#7162" class="InductiveConstructor">no</a> <a id="8588" class="Symbol">(</a><a id="8589" href="/Decidable/#7814" class="Function">¬s≤s</a> <a id="8594" href="/Decidable/#8578" class="Bound">¬m≤n</a><a id="8598" class="Symbol">)</a></pre>
+<p>As with <code class="highlighter-rouge">_≤ᵇ_</code>, the definition has three clauses.  In the first
+clause, it is immediate that <code class="highlighter-rouge">zero ≤ n</code> holds, and it is evidenced by
+<code class="highlighter-rouge">z≤n</code>.  In the second clause, it is immediate that <code class="highlighter-rouge">suc m ≤ n</code> does
+not hold, and it is evidenced by <code class="highlighter-rouge">¬s≤z</code>.
+In the third clause, to decide whether <code class="highlighter-rouge">suc m ≤ suc n</code> holds we
+recursively invoke <code class="highlighter-rouge">m ≤? n</code>.  There are two possibilities.  In the
+<code class="highlighter-rouge">yes</code> case it returns evidence <code class="highlighter-rouge">m≤n</code> that <code class="highlighter-rouge">m ≤ n</code>, and <code class="highlighter-rouge">s≤s m≤n</code>
+provides evidence that <code class="highlighter-rouge">suc m ≤ suc n</code>.  In the <code class="highlighter-rouge">no</code> case it returns
+evidence <code class="highlighter-rouge">¬m≤n</code> that <code class="highlighter-rouge">¬ (m ≤ n)</code>, and <code class="highlighter-rouge">¬s≤s ¬m≤n</code> provides evidence
+that <code class="highlighter-rouge">¬ (suc m ≤ suc n)</code>.</p>
+
+<p>When we wrote <code class="highlighter-rouge">_≤ᵇ_</code>, we had to write two other functions, <code class="highlighter-rouge">≤ᵇ→≤</code> and <code class="highlighter-rouge">≤→≤ᵇ</code>,
+in order to show that it was correct.  In contrast, the definition of <code class="highlighter-rouge">_≤?_</code>
+proves itself correct, as attested to by its type.  The code of <code class="highlighter-rouge">_≤?_</code>
+is far more compact than the combined code of <code class="highlighter-rouge">_≤ᵇ_</code>, <code class="highlighter-rouge">≤ᵇ→≤</code>, and <code class="highlighter-rouge">≤→≤ᵇ</code>.
+And, as we will later show, if you really want the latter three, it is easy
+to derive them from the first.</p>
+
+<p>We can use our new function to <em>compute</em> the <em>evidence</em> that earlier we had to
+think up on our own.</p>
+<pre class="Agda"><a id="9735" href="/Decidable/#9735" class="Function">_</a> <a id="9737" class="Symbol">:</a> <a id="9739" class="Number">2</a> <a id="9741" href="/Decidable/#8435" class="Function Operator">≤?</a> <a id="9744" class="Number">4</a> <a id="9746" href="https://agda.github.io/agda-stdlib/Agda.Builtin.Equality.html#83" class="Datatype Operator">≡</a> <a id="9748" href="/Decidable/#7144" class="InductiveConstructor">yes</a> <a id="9752" class="Symbol">(</a><a id="9753" href="/Decidable/#1314" class="InductiveConstructor">s≤s</a> <a id="9757" class="Symbol">(</a><a id="9758" href="/Decidable/#1314" class="InductiveConstructor">s≤s</a> <a id="9762" href="/Decidable/#1285" class="InductiveConstructor">z≤n</a><a id="9765" class="Symbol">))</a>
+<a id="9768" class="Symbol">_</a> <a id="9770" class="Symbol">=</a> <a id="9772" href="https://agda.github.io/agda-stdlib/Agda.Builtin.Equality.html#140" class="InductiveConstructor">refl</a>
+
+<a id="9778" href="/Decidable/#9778" class="Function">_</a> <a id="9780" class="Symbol">:</a> <a id="9782" class="Number">4</a> <a id="9784" href="/Decidable/#8435" class="Function Operator">≤?</a> <a id="9787" class="Number">2</a> <a id="9789" href="https://agda.github.io/agda-stdlib/Agda.Builtin.Equality.html#83" class="Datatype Operator">≡</a> <a id="9791" href="/Decidable/#7162" class="InductiveConstructor">no</a> <a id="9794" class="Symbol">(</a><a id="9795" href="/Decidable/#7814" class="Function">¬s≤s</a> <a id="9800" class="Symbol">(</a><a id="9801" href="/Decidable/#7814" class="Function">¬s≤s</a> <a id="9806" href="/Decidable/#7769" class="Function">¬s≤z</a><a id="9810" class="Symbol">))</a>
+<a id="9813" class="Symbol">_</a> <a id="9815" class="Symbol">=</a> <a id="9817" href="https://agda.github.io/agda-stdlib/Agda.Builtin.Equality.html#140" class="InductiveConstructor">refl</a></pre>
+<p>You can check that Agda will indeed compute these values.  Typing
+<code class="highlighter-rouge">C-c C-n</code> and providing <code class="highlighter-rouge">2 ≤? 4</code> or <code class="highlighter-rouge">4 ≤? 2</code> as the requested expression
+causes Agda to print the values given above.</p>
+
+<p>(A subtlety: if we do not define <code class="highlighter-rouge">¬s≤z</code> and <code class="highlighter-rouge">¬s≤s</code> as top-level functions,
+but instead use inline anonymous functions then Agda may have
+trouble normalising evidence of negation.)</p>
+
+<h2 id="decidables-from-booleans-and-booleans-from-decidables">Decidables from booleans, and booleans from decidables</h2>
+
+<p>Curious readers might wonder if we could reuse the definition of
+<code class="highlighter-rouge">m ≤ᵇ n</code>, together with the proofs that it is equivalent to <code class="highlighter-rouge">m ≤ n</code>, to show
+decidability.  Indeed we can do so as follows.</p>
+<pre class="Agda"><a id="_≤?′_"></a><a id="10460" href="/Decidable/#10460" class="Function Operator">_≤?′_</a> <a id="10466" class="Symbol">:</a> <a id="10468" class="Symbol">∀</a> <a id="10470" class="Symbol">(</a><a id="10471" href="/Decidable/#10471" class="Bound">m</a> <a id="10473" href="/Decidable/#10473" class="Bound">n</a> <a id="10475" class="Symbol">:</a> <a id="10477" href="https://agda.github.io/agda-stdlib/Agda.Builtin.Nat.html#97" class="Datatype">ℕ</a><a id="10478" class="Symbol">)</a> <a id="10480" class="Symbol">→</a> <a id="10482" href="/Decidable/#7116" class="Datatype">Dec</a> <a id="10486" class="Symbol">(</a><a id="10487" href="/Decidable/#10471" class="Bound">m</a> <a id="10489" href="/Decidable/#1259" class="Datatype Operator">≤</a> <a id="10491" href="/Decidable/#10473" class="Bound">n</a><a id="10492" class="Symbol">)</a>
+<a id="10494" href="/Decidable/#10494" class="Bound">m</a> <a id="10496" href="/Decidable/#10460" class="Function Operator">≤?′</a> <a id="10500" href="/Decidable/#10500" class="Bound">n</a> <a id="10502" class="Keyword">with</a> <a id="10507" href="/Decidable/#10494" class="Bound">m</a> <a id="10509" href="/Decidable/#2083" class="Function Operator">≤ᵇ</a> <a id="10512" href="/Decidable/#10500" class="Bound">n</a> <a id="10514" class="Symbol">|</a> <a id="10516" href="/Decidable/#4618" class="Function">≤ᵇ→≤</a> <a id="10521" href="/Decidable/#10494" class="Bound">m</a> <a id="10523" href="/Decidable/#10500" class="Bound">n</a> <a id="10525" class="Symbol">|</a> <a id="10527" href="/Decidable/#5464" class="Function">≤→≤ᵇ</a> <a id="10532" class="Symbol">{</a><a id="10533" href="/Decidable/#10494" class="Bound">m</a><a id="10534" class="Symbol">}</a> <a id="10536" class="Symbol">{</a><a id="10537" href="/Decidable/#10500" class="Bound">n</a><a id="10538" class="Symbol">}</a>
+<a id="10540" class="Symbol">...</a>        <a id="10551" class="Symbol">|</a> <a id="10553" href="/Decidable/#1885" class="InductiveConstructor">true</a>   <a id="10560" class="Symbol">|</a> <a id="10562" href="/Decidable/#10562" class="Bound">p</a>        <a id="10571" class="Symbol">|</a> <a id="10573" class="Symbol">_</a>            <a id="10586" class="Symbol">=</a> <a id="10588" href="/Decidable/#7144" class="InductiveConstructor">yes</a> <a id="10592" class="Symbol">(</a><a id="10593" href="/Decidable/#10562" class="Bound">p</a> <a id="10595" href="https://agda.github.io/agda-stdlib/Agda.Builtin.Unit.html#106" class="InductiveConstructor">tt</a><a id="10597" class="Symbol">)</a>
+<a id="10599" class="Symbol">...</a>        <a id="10610" class="Symbol">|</a> <a id="10612" href="/Decidable/#1900" class="InductiveConstructor">false</a>  <a id="10619" class="Symbol">|</a> <a id="10621" class="Symbol">_</a>        <a id="10630" class="Symbol">|</a> <a id="10632" href="/Decidable/#10632" class="Bound">¬p</a>           <a id="10645" class="Symbol">=</a> <a id="10647" href="/Decidable/#7162" class="InductiveConstructor">no</a> <a id="10650" href="/Decidable/#10632" class="Bound">¬p</a></pre>
+<p>If <code class="highlighter-rouge">m ≤ᵇ n</code> is true then <code class="highlighter-rouge">≤ᵇ→≤</code> yields a proof that <code class="highlighter-rouge">m ≤ n</code> holds,
+while if it is false then <code class="highlighter-rouge">≤→≤ᵇ</code> takes a proof the <code class="highlighter-rouge">m ≤ n</code> holds into a contradiction.</p>
+
+<p>The triple binding of the <code class="highlighter-rouge">with</code> clause in this proof is essential.
+If instead we wrote</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>_≤?″_ : ∀ (m n : ℕ) → Dec (m ≤ n)
+m ≤?″ n with m ≤ᵇ n
+... | true  = yes (≤ᵇ→≤ m n tt)
+... | false = no (≤→≤ᵇ {m} {n})
+</code></pre></div></div>
+
+<p>then Agda would make two complaints, one for each clause</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>⊤ !=&lt; (T (m ≤ᵇ n)) of type Set
+when checking that the expression tt has type T (m ≤ᵇ n)
+
+T (m ≤ᵇ n) !=&lt; ⊥ of type Set
+when checking that the expression ≤→≤ᵇ {m} {n} has type ¬ m ≤ n
+</code></pre></div></div>
+
+<p>Putting the expressions into the <code class="highlighter-rouge">with</code> clause permits Agda to exploit
+the fact that <code class="highlighter-rouge">T (m ≤ᵇ n)</code> is <code class="highlighter-rouge">⊤</code> when <code class="highlighter-rouge">m ≤ᵇ n</code> is true, and that
+<code class="highlighter-rouge">T (m ≤ᵇ n)</code> is <code class="highlighter-rouge">⊥</code> when <code class="highlighter-rouge">m ≤ᵇ n</code> is false.</p>
+
+<p>However, overall it is simpler to just define <code class="highlighter-rouge">_≤?_</code> directly, as in the previous
+section.  If one really wants <code class="highlighter-rouge">_≤ᵇ_</code>, then it and its properties are easily derived
+from <code class="highlighter-rouge">_≤?_</code>, as we will now show.</p>
+
+<p>Erasure takes a decidable value to a boolean.</p>
+<pre class="Agda"><a id="⌊_⌋"></a><a id="11742" href="/Decidable/#11742" class="Function Operator">⌊_⌋</a> <a id="11746" class="Symbol">:</a> <a id="11748" class="Symbol">∀</a> <a id="11750" class="Symbol">{</a><a id="11751" href="/Decidable/#11751" class="Bound">A</a> <a id="11753" class="Symbol">:</a> <a id="11755" class="PrimitiveType">Set</a><a id="11758" class="Symbol">}</a> <a id="11760" class="Symbol">→</a> <a id="11762" href="/Decidable/#7116" class="Datatype">Dec</a> <a id="11766" href="/Decidable/#11751" class="Bound">A</a> <a id="11768" class="Symbol">→</a> <a id="11770" href="/Decidable/#1866" class="Datatype">Bool</a>
+<a id="11775" href="/Decidable/#11742" class="Function Operator">⌊</a> <a id="11777" href="/Decidable/#7144" class="InductiveConstructor">yes</a> <a id="11781" href="/Decidable/#11781" class="Bound">x</a> <a id="11783" href="/Decidable/#11742" class="Function Operator">⌋</a> <a id="11785" class="Symbol">=</a> <a id="11787" href="/Decidable/#1885" class="InductiveConstructor">true</a>
+<a id="11792" href="/Decidable/#11742" class="Function Operator">⌊</a> <a id="11794" href="/Decidable/#7162" class="InductiveConstructor">no</a> <a id="11797" href="/Decidable/#11797" class="Bound">¬x</a> <a id="11800" href="/Decidable/#11742" class="Function Operator">⌋</a> <a id="11802" class="Symbol">=</a> <a id="11804" href="/Decidable/#1900" class="InductiveConstructor">false</a></pre>
+<p>Using erasure, we can easily derive <code class="highlighter-rouge">_≤ᵇ_</code> from <code class="highlighter-rouge">_≤?_</code>.</p>
+<pre class="Agda"><a id="_≤ᵇ′_"></a><a id="11890" href="/Decidable/#11890" class="Function Operator">_≤ᵇ′_</a> <a id="11896" class="Symbol">:</a> <a id="11898" href="https://agda.github.io/agda-stdlib/Agda.Builtin.Nat.html#97" class="Datatype">ℕ</a> <a id="11900" class="Symbol">→</a> <a id="11902" href="https://agda.github.io/agda-stdlib/Agda.Builtin.Nat.html#97" class="Datatype">ℕ</a> <a id="11904" class="Symbol">→</a> <a id="11906" href="/Decidable/#1866" class="Datatype">Bool</a>
+<a id="11911" href="/Decidable/#11911" class="Bound">m</a> <a id="11913" href="/Decidable/#11890" class="Function Operator">≤ᵇ′</a> <a id="11917" href="/Decidable/#11917" class="Bound">n</a> <a id="11919" class="Symbol">=</a> <a id="11921" href="/Decidable/#11742" class="Function Operator">⌊</a> <a id="11923" href="/Decidable/#11911" class="Bound">m</a> <a id="11925" href="/Decidable/#8435" class="Function Operator">≤?</a> <a id="11928" href="/Decidable/#11917" class="Bound">n</a> <a id="11930" href="/Decidable/#11742" class="Function Operator">⌋</a></pre>
+
+<p>Further, if <code class="highlighter-rouge">D</code> is a value of type <code class="highlighter-rouge">Dec A</code>, then <code class="highlighter-rouge">T ⌊ D ⌋</code> is
+inhabited exactly when <code class="highlighter-rouge">A</code> is inhabited.</p>
+<pre class="Agda"><a id="toWitness"></a><a id="12060" href="/Decidable/#12060" class="Function">toWitness</a> <a id="12070" class="Symbol">:</a> <a id="12072" class="Symbol">∀</a> <a id="12074" class="Symbol">{</a><a id="12075" href="/Decidable/#12075" class="Bound">A</a> <a id="12077" class="Symbol">:</a> <a id="12079" class="PrimitiveType">Set</a><a id="12082" class="Symbol">}</a> <a id="12084" class="Symbol">→</a> <a id="12086" class="Symbol">{</a><a id="12087" href="/Decidable/#12087" class="Bound">D</a> <a id="12089" class="Symbol">:</a> <a id="12091" href="/Decidable/#7116" class="Datatype">Dec</a> <a id="12095" href="/Decidable/#12075" class="Bound">A</a><a id="12096" class="Symbol">}</a> <a id="12098" class="Symbol">→</a> <a id="12100" href="/Decidable/#3398" class="Function">T</a> <a id="12102" href="/Decidable/#11742" class="Function Operator">⌊</a> <a id="12104" href="/Decidable/#12087" class="Bound">D</a> <a id="12106" href="/Decidable/#11742" class="Function Operator">⌋</a> <a id="12108" class="Symbol">→</a> <a id="12110" href="/Decidable/#12075" class="Bound">A</a>
+<a id="12112" href="/Decidable/#12060" class="Function">toWitness</a> <a id="12122" class="Symbol">{</a><a id="12123" href="/Decidable/#12123" class="Bound">A</a><a id="12124" class="Symbol">}</a> <a id="12126" class="Symbol">{</a><a id="12127" href="/Decidable/#7144" class="InductiveConstructor">yes</a> <a id="12131" href="/Decidable/#12131" class="Bound">x</a><a id="12132" class="Symbol">}</a> <a id="12134" href="https://agda.github.io/agda-stdlib/Agda.Builtin.Unit.html#106" class="InductiveConstructor">tt</a>  <a id="12138" class="Symbol">=</a> <a id="12140" href="/Decidable/#12131" class="Bound">x</a>
+<a id="12142" href="/Decidable/#12060" class="Function">toWitness</a> <a id="12152" class="Symbol">{</a><a id="12153" href="/Decidable/#12153" class="Bound">A</a><a id="12154" class="Symbol">}</a> <a id="12156" class="Symbol">{</a><a id="12157" href="/Decidable/#7162" class="InductiveConstructor">no</a> <a id="12160" href="/Decidable/#12160" class="Bound">¬x</a><a id="12162" class="Symbol">}</a> <a id="12164" class="Symbol">()</a>
+
+<a id="fromWitness"></a><a id="12168" href="/Decidable/#12168" class="Function">fromWitness</a> <a id="12180" class="Symbol">:</a> <a id="12182" class="Symbol">∀</a> <a id="12184" class="Symbol">{</a><a id="12185" href="/Decidable/#12185" class="Bound">A</a> <a id="12187" class="Symbol">:</a> <a id="12189" class="PrimitiveType">Set</a><a id="12192" class="Symbol">}</a> <a id="12194" class="Symbol">→</a> <a id="12196" class="Symbol">{</a><a id="12197" href="/Decidable/#12197" class="Bound">D</a> <a id="12199" class="Symbol">:</a> <a id="12201" href="/Decidable/#7116" class="Datatype">Dec</a> <a id="12205" href="/Decidable/#12185" class="Bound">A</a><a id="12206" class="Symbol">}</a> <a id="12208" class="Symbol">→</a> <a id="12210" href="/Decidable/#12185" class="Bound">A</a> <a id="12212" class="Symbol">→</a> <a id="12214" href="/Decidable/#3398" class="Function">T</a> <a id="12216" href="/Decidable/#11742" class="Function Operator">⌊</a> <a id="12218" href="/Decidable/#12197" class="Bound">D</a> <a id="12220" href="/Decidable/#11742" class="Function Operator">⌋</a>
+<a id="12222" href="/Decidable/#12168" class="Function">fromWitness</a> <a id="12234" class="Symbol">{</a><a id="12235" href="/Decidable/#12235" class="Bound">A</a><a id="12236" class="Symbol">}</a> <a id="12238" class="Symbol">{</a><a id="12239" href="/Decidable/#7144" class="InductiveConstructor">yes</a> <a id="12243" href="/Decidable/#12243" class="Bound">x</a><a id="12244" class="Symbol">}</a> <a id="12246" class="Symbol">_</a> <a id="12248" class="Symbol">=</a> <a id="12250" href="https://agda.github.io/agda-stdlib/Agda.Builtin.Unit.html#106" class="InductiveConstructor">tt</a>
+<a id="12253" href="/Decidable/#12168" class="Function">fromWitness</a> <a id="12265" class="Symbol">{</a><a id="12266" href="/Decidable/#12266" class="Bound">A</a><a id="12267" class="Symbol">}</a> <a id="12269" class="Symbol">{</a><a id="12270" href="/Decidable/#7162" class="InductiveConstructor">no</a> <a id="12273" href="/Decidable/#12273" class="Bound">¬x</a><a id="12275" class="Symbol">}</a> <a id="12277" href="/Decidable/#12277" class="Bound">x</a> <a id="12279" class="Symbol">=</a> <a id="12281" href="/Decidable/#12273" class="Bound">¬x</a> <a id="12284" href="/Decidable/#12277" class="Bound">x</a></pre>
+<p>Using these, we can easily derive that <code class="highlighter-rouge">T (m ≤ᵇ′ n)</code> is inhabited
+exactly when <code class="highlighter-rouge">m ≤ n</code> is inhabited.</p>
+<pre class="Agda"><a id="≤ᵇ′→≤"></a><a id="12411" href="/Decidable/#12411" class="Function">≤ᵇ′→≤</a> <a id="12417" class="Symbol">:</a> <a id="12419" class="Symbol">∀</a> <a id="12421" class="Symbol">{</a><a id="12422" href="/Decidable/#12422" class="Bound">m</a> <a id="12424" href="/Decidable/#12424" class="Bound">n</a> <a id="12426" class="Symbol">:</a> <a id="12428" href="https://agda.github.io/agda-stdlib/Agda.Builtin.Nat.html#97" class="Datatype">ℕ</a><a id="12429" class="Symbol">}</a> <a id="12431" class="Symbol">→</a> <a id="12433" href="/Decidable/#3398" class="Function">T</a> <a id="12435" class="Symbol">(</a><a id="12436" href="/Decidable/#12422" class="Bound">m</a> <a id="12438" href="/Decidable/#11890" class="Function Operator">≤ᵇ′</a> <a id="12442" href="/Decidable/#12424" class="Bound">n</a><a id="12443" class="Symbol">)</a> <a id="12445" class="Symbol">→</a> <a id="12447" href="/Decidable/#12422" class="Bound">m</a> <a id="12449" href="/Decidable/#1259" class="Datatype Operator">≤</a> <a id="12451" href="/Decidable/#12424" class="Bound">n</a>
+<a id="12453" href="/Decidable/#12411" class="Function">≤ᵇ′→≤</a> <a id="12459" class="Symbol">=</a> <a id="12461" href="/Decidable/#12060" class="Function">toWitness</a>
+
+<a id="≤→≤ᵇ′"></a><a id="12472" href="/Decidable/#12472" class="Function">≤→≤ᵇ′</a> <a id="12478" class="Symbol">:</a> <a id="12480" class="Symbol">∀</a> <a id="12482" class="Symbol">{</a><a id="12483" href="/Decidable/#12483" class="Bound">m</a> <a id="12485" href="/Decidable/#12485" class="Bound">n</a> <a id="12487" class="Symbol">:</a> <a id="12489" href="https://agda.github.io/agda-stdlib/Agda.Builtin.Nat.html#97" class="Datatype">ℕ</a><a id="12490" class="Symbol">}</a> <a id="12492" class="Symbol">→</a> <a id="12494" href="/Decidable/#12483" class="Bound">m</a> <a id="12496" href="/Decidable/#1259" class="Datatype Operator">≤</a> <a id="12498" href="/Decidable/#12485" class="Bound">n</a> <a id="12500" class="Symbol">→</a> <a id="12502" href="/Decidable/#3398" class="Function">T</a> <a id="12504" class="Symbol">(</a><a id="12505" href="/Decidable/#12483" class="Bound">m</a> <a id="12507" href="/Decidable/#11890" class="Function Operator">≤ᵇ′</a> <a id="12511" href="/Decidable/#12485" class="Bound">n</a><a id="12512" class="Symbol">)</a>
+<a id="12514" href="/Decidable/#12472" class="Function">≤→≤ᵇ′</a> <a id="12520" class="Symbol">=</a> <a id="12522" href="/Decidable/#12168" class="Function">fromWitness</a></pre>
+
+<p>In summary, it is usually best to eschew booleans and rely on decidables instead.
+If you need booleans, they and their properties are easily derived from the
+corresponding decidables.</p>
+
+<h2 id="logical-connectives">Logical connectives</h2>
+
+<p>Most readers will be familiar with the logical connectives for booleans.
+Each of these extends to decidables.</p>
+
+<p>The conjunction of two booleans is true if both are true,
+and false is either is false.</p>
+<pre class="Agda"><a id="12967" class="Keyword">infixr</a> <a id="12974" class="Number">6</a> <a id="12976" href="/Decidable/#12981" class="Function Operator">_∧_</a>
+
+<a id="_∧_"></a><a id="12981" href="/Decidable/#12981" class="Function Operator">_∧_</a> <a id="12985" class="Symbol">:</a> <a id="12987" href="/Decidable/#1866" class="Datatype">Bool</a> <a id="12992" class="Symbol">→</a> <a id="12994" href="/Decidable/#1866" class="Datatype">Bool</a> <a id="12999" class="Symbol">→</a> <a id="13001" href="/Decidable/#1866" class="Datatype">Bool</a>
+<a id="13006" href="/Decidable/#1885" class="InductiveConstructor">true</a>  <a id="13012" href="/Decidable/#12981" class="Function Operator">∧</a> <a id="13014" href="/Decidable/#1885" class="InductiveConstructor">true</a>  <a id="13020" class="Symbol">=</a> <a id="13022" href="/Decidable/#1885" class="InductiveConstructor">true</a>
+<a id="13027" href="/Decidable/#1900" class="InductiveConstructor">false</a> <a id="13033" href="/Decidable/#12981" class="Function Operator">∧</a> <a id="13035" class="Symbol">_</a>     <a id="13041" class="Symbol">=</a> <a id="13043" href="/Decidable/#1900" class="InductiveConstructor">false</a>
+<a id="13049" class="CatchallClause Symbol">_</a><a id="13050" class="CatchallClause">     </a><a id="13055" href="/Decidable/#12981" class="CatchallClause Function Operator">∧</a><a id="13056" class="CatchallClause"> </a><a id="13057" href="/Decidable/#1900" class="CatchallClause InductiveConstructor">false</a> <a id="13063" class="Symbol">=</a> <a id="13065" href="/Decidable/#1900" class="InductiveConstructor">false</a></pre>
+<p>In Emacs, the left-hand side of the third equation displays in grey,
+indicating that the order of the equations determines which of the
+second or the third can match.  However, regardless of which matches
+the answer is the same.</p>
+
+<p>Correspondingly, given two decidable propositions, we can
+decide their conjunction.</p>
+<pre class="Agda"><a id="13409" class="Keyword">infixr</a> <a id="13416" class="Number">6</a> <a id="13418" href="/Decidable/#13427" class="Function Operator">_×-dec_</a>
+
+<a id="_×-dec_"></a><a id="13427" href="/Decidable/#13427" class="Function Operator">_×-dec_</a> <a id="13435" class="Symbol">:</a> <a id="13437" class="Symbol">{</a><a id="13438" href="/Decidable/#13438" class="Bound">A</a> <a id="13440" href="/Decidable/#13440" class="Bound">B</a> <a id="13442" class="Symbol">:</a> <a id="13444" class="PrimitiveType">Set</a><a id="13447" class="Symbol">}</a> <a id="13449" class="Symbol">→</a> <a id="13451" href="/Decidable/#7116" class="Datatype">Dec</a> <a id="13455" href="/Decidable/#13438" class="Bound">A</a> <a id="13457" class="Symbol">→</a> <a id="13459" href="/Decidable/#7116" class="Datatype">Dec</a> <a id="13463" href="/Decidable/#13440" class="Bound">B</a> <a id="13465" class="Symbol">→</a> <a id="13467" href="/Decidable/#7116" class="Datatype">Dec</a> <a id="13471" class="Symbol">(</a><a id="13472" href="/Decidable/#13438" class="Bound">A</a> <a id="13474" href="https://agda.github.io/agda-stdlib/Data.Product.html#1329" class="Function Operator">×</a> <a id="13476" href="/Decidable/#13440" class="Bound">B</a><a id="13477" class="Symbol">)</a>
+<a id="13479" href="/Decidable/#7144" class="InductiveConstructor">yes</a> <a id="13483" href="/Decidable/#13483" class="Bound">x</a> <a id="13485" href="/Decidable/#13427" class="Function Operator">×-dec</a> <a id="13491" href="/Decidable/#7144" class="InductiveConstructor">yes</a> <a id="13495" href="/Decidable/#13495" class="Bound">y</a> <a id="13497" class="Symbol">=</a> <a id="13499" href="/Decidable/#7144" class="InductiveConstructor">yes</a> <a id="13503" href="https://agda.github.io/agda-stdlib/Data.Product.html#543" class="InductiveConstructor Operator">⟨</a> <a id="13505" href="/Decidable/#13483" class="Bound">x</a> <a id="13507" href="https://agda.github.io/agda-stdlib/Data.Product.html#543" class="InductiveConstructor Operator">,</a> <a id="13509" href="/Decidable/#13495" class="Bound">y</a> <a id="13511" href="https://agda.github.io/agda-stdlib/Data.Product.html#543" class="InductiveConstructor Operator">⟩</a>
+<a id="13513" href="/Decidable/#7162" class="InductiveConstructor">no</a> <a id="13516" href="/Decidable/#13516" class="Bound">¬x</a> <a id="13519" href="/Decidable/#13427" class="Function Operator">×-dec</a> <a id="13525" class="Symbol">_</a>     <a id="13531" class="Symbol">=</a> <a id="13533" href="/Decidable/#7162" class="InductiveConstructor">no</a> <a id="13536" class="Symbol">λ{</a> <a id="13539" href="https://agda.github.io/agda-stdlib/Data.Product.html#543" class="InductiveConstructor Operator">⟨</a> <a id="13541" href="/Decidable/#13541" class="Bound">x</a> <a id="13543" href="https://agda.github.io/agda-stdlib/Data.Product.html#543" class="InductiveConstructor Operator">,</a> <a id="13545" href="/Decidable/#13545" class="Bound">y</a> <a id="13547" href="https://agda.github.io/agda-stdlib/Data.Product.html#543" class="InductiveConstructor Operator">⟩</a> <a id="13549" class="Symbol">→</a> <a id="13551" href="/Decidable/#13516" class="Bound">¬x</a> <a id="13554" href="/Decidable/#13541" class="Bound">x</a> <a id="13556" class="Symbol">}</a>
+<a id="13558" class="CatchallClause Symbol">_</a><a id="13559" class="CatchallClause">     </a><a id="13564" href="/Decidable/#13427" class="CatchallClause Function Operator">×-dec</a><a id="13569" class="CatchallClause"> </a><a id="13570" href="/Decidable/#7162" class="CatchallClause InductiveConstructor">no</a><a id="13572" class="CatchallClause"> </a><a id="13573" href="/Decidable/#13573" class="CatchallClause Bound">¬y</a> <a id="13576" class="Symbol">=</a> <a id="13578" href="/Decidable/#7162" class="InductiveConstructor">no</a> <a id="13581" class="Symbol">λ{</a> <a id="13584" href="https://agda.github.io/agda-stdlib/Data.Product.html#543" class="InductiveConstructor Operator">⟨</a> <a id="13586" href="/Decidable/#13586" class="Bound">x</a> <a id="13588" href="https://agda.github.io/agda-stdlib/Data.Product.html#543" class="InductiveConstructor Operator">,</a> <a id="13590" href="/Decidable/#13590" class="Bound">y</a> <a id="13592" href="https://agda.github.io/agda-stdlib/Data.Product.html#543" class="InductiveConstructor Operator">⟩</a> <a id="13594" class="Symbol">→</a> <a id="13596" href="/Decidable/#13573" class="Bound">¬y</a> <a id="13599" href="/Decidable/#13590" class="Bound">y</a> <a id="13601" class="Symbol">}</a></pre>
+<p>The conjunction of two propositions holds if they both hold,
+and its negation holds if the negation of either holds.
+If both hold, then we pair the evidence for each to yield
+evidence of the conjunct.  If the negation of either holds,
+assuming the conjunct will lead to a contradiction.</p>
+
+<p>Again in Emacs, the left-hand side of the third equation displays in grey,
+indicating that the order of the equations determines which of the
+second or the third can match.  This time the answer is different depending
+on which matches; if both conjuncts fail to hold we pick the first to
+yield the contradiction, but it would be equally valid to pick the second.</p>
+
+<p>The disjunction of two booleans is true if either is true,
+and false if both are false.</p>
+<pre class="Agda"><a id="14367" class="Keyword">infixr</a> <a id="14374" class="Number">5</a> <a id="14376" href="/Decidable/#14381" class="Function Operator">_∨_</a>
+
+<a id="_∨_"></a><a id="14381" href="/Decidable/#14381" class="Function Operator">_∨_</a> <a id="14385" class="Symbol">:</a> <a id="14387" href="/Decidable/#1866" class="Datatype">Bool</a> <a id="14392" class="Symbol">→</a> <a id="14394" href="/Decidable/#1866" class="Datatype">Bool</a> <a id="14399" class="Symbol">→</a> <a id="14401" href="/Decidable/#1866" class="Datatype">Bool</a>
+<a id="14406" href="/Decidable/#1885" class="InductiveConstructor">true</a>  <a id="14412" href="/Decidable/#14381" class="Function Operator">∨</a> <a id="14414" class="Symbol">_</a>      <a id="14421" class="Symbol">=</a> <a id="14423" href="/Decidable/#1885" class="InductiveConstructor">true</a>
+<a id="14428" class="CatchallClause Symbol">_</a><a id="14429" class="CatchallClause">     </a><a id="14434" href="/Decidable/#14381" class="CatchallClause Function Operator">∨</a><a id="14435" class="CatchallClause"> </a><a id="14436" href="/Decidable/#1885" class="CatchallClause InductiveConstructor">true</a>   <a id="14443" class="Symbol">=</a> <a id="14445" href="/Decidable/#1885" class="InductiveConstructor">true</a>
+<a id="14450" href="/Decidable/#1900" class="InductiveConstructor">false</a> <a id="14456" href="/Decidable/#14381" class="Function Operator">∨</a> <a id="14458" href="/Decidable/#1900" class="InductiveConstructor">false</a>  <a id="14465" class="Symbol">=</a> <a id="14467" href="/Decidable/#1900" class="InductiveConstructor">false</a></pre>
+<p>In Emacs, the left-hand side of the second equation displays in grey,
+indicating that the order of the equations determines which of the
+first or the second can match.  However, regardless of which matches
+the answer is the same.</p>
+
+<p>Correspondingly, given two decidable propositions, we can
+decide their disjunction.</p>
+<pre class="Agda"><a id="14812" class="Keyword">infixr</a> <a id="14819" class="Number">5</a> <a id="14821" href="/Decidable/#14830" class="Function Operator">_⊎-dec_</a>
+
+<a id="_⊎-dec_"></a><a id="14830" href="/Decidable/#14830" class="Function Operator">_⊎-dec_</a> <a id="14838" class="Symbol">:</a> <a id="14840" class="Symbol">{</a><a id="14841" href="/Decidable/#14841" class="Bound">A</a> <a id="14843" href="/Decidable/#14843" class="Bound">B</a> <a id="14845" class="Symbol">:</a> <a id="14847" class="PrimitiveType">Set</a><a id="14850" class="Symbol">}</a> <a id="14852" class="Symbol">→</a> <a id="14854" href="/Decidable/#7116" class="Datatype">Dec</a> <a id="14858" href="/Decidable/#14841" class="Bound">A</a> <a id="14860" class="Symbol">→</a> <a id="14862" href="/Decidable/#7116" class="Datatype">Dec</a> <a id="14866" href="/Decidable/#14843" class="Bound">B</a> <a id="14868" class="Symbol">→</a> <a id="14870" href="/Decidable/#7116" class="Datatype">Dec</a> <a id="14874" class="Symbol">(</a><a id="14875" href="/Decidable/#14841" class="Bound">A</a> <a id="14877" href="https://agda.github.io/agda-stdlib/Data.Sum.Base.html#414" class="Datatype Operator">⊎</a> <a id="14879" href="/Decidable/#14843" class="Bound">B</a><a id="14880" class="Symbol">)</a>
+<a id="14882" href="/Decidable/#7144" class="InductiveConstructor">yes</a> <a id="14886" href="/Decidable/#14886" class="Bound">x</a> <a id="14888" href="/Decidable/#14830" class="Function Operator">⊎-dec</a> <a id="14894" class="Symbol">_</a>     <a id="14900" class="Symbol">=</a> <a id="14902" href="/Decidable/#7144" class="InductiveConstructor">yes</a> <a id="14906" class="Symbol">(</a><a id="14907" href="https://agda.github.io/agda-stdlib/Data.Sum.Base.html#470" class="InductiveConstructor">inj₁</a> <a id="14912" href="/Decidable/#14886" class="Bound">x</a><a id="14913" class="Symbol">)</a>
+<a id="14915" class="CatchallClause Symbol">_</a><a id="14916" class="CatchallClause">     </a><a id="14921" href="/Decidable/#14830" class="CatchallClause Function Operator">⊎-dec</a><a id="14926" class="CatchallClause"> </a><a id="14927" href="/Decidable/#7144" class="CatchallClause InductiveConstructor">yes</a><a id="14930" class="CatchallClause"> </a><a id="14931" href="/Decidable/#14931" class="CatchallClause Bound">y</a> <a id="14933" class="Symbol">=</a> <a id="14935" href="/Decidable/#7144" class="InductiveConstructor">yes</a> <a id="14939" class="Symbol">(</a><a id="14940" href="https://agda.github.io/agda-stdlib/Data.Sum.Base.html#495" class="InductiveConstructor">inj₂</a> <a id="14945" href="/Decidable/#14931" class="Bound">y</a><a id="14946" class="Symbol">)</a>
+<a id="14948" href="/Decidable/#7162" class="InductiveConstructor">no</a> <a id="14951" href="/Decidable/#14951" class="Bound">¬x</a> <a id="14954" href="/Decidable/#14830" class="Function Operator">⊎-dec</a> <a id="14960" href="/Decidable/#7162" class="InductiveConstructor">no</a> <a id="14963" href="/Decidable/#14963" class="Bound">¬y</a> <a id="14966" class="Symbol">=</a> <a id="14968" href="/Decidable/#7162" class="InductiveConstructor">no</a> <a id="14971" class="Symbol">λ{</a> <a id="14974" class="Symbol">(</a><a id="14975" href="https://agda.github.io/agda-stdlib/Data.Sum.Base.html#470" class="InductiveConstructor">inj₁</a> <a id="14980" href="/Decidable/#14980" class="Bound">x</a><a id="14981" class="Symbol">)</a> <a id="14983" class="Symbol">→</a> <a id="14985" href="/Decidable/#14951" class="Bound">¬x</a> <a id="14988" href="/Decidable/#14980" class="Bound">x</a> <a id="14990" class="Symbol">;</a> <a id="14992" class="Symbol">(</a><a id="14993" href="https://agda.github.io/agda-stdlib/Data.Sum.Base.html#495" class="InductiveConstructor">inj₂</a> <a id="14998" href="/Decidable/#14998" class="Bound">y</a><a id="14999" class="Symbol">)</a> <a id="15001" class="Symbol">→</a> <a id="15003" href="/Decidable/#14963" class="Bound">¬y</a> <a id="15006" href="/Decidable/#14998" class="Bound">y</a> <a id="15008" class="Symbol">}</a></pre>
+<p>The disjunction of two propositions holds if either holds,
+and its negation holds if the negation of both hold.
+If either holds, we inject the evidence to yield
+evidence of the disjunct.  If the negation of both hold,
+assuming either disjunct will lead to a contradiction.</p>
+
+<p>Again in Emacs, the left-hand side of the second equation displays in grey,
+indicating that the order of the equations determines which of the
+first or the second can match.  This time the answer is different depending
+on which matches; if both disjuncts hold we pick the first,
+but it would be equally valid to pick the second.</p>
+
+<p>The negation of a boolean is false if its argument is true,
+and vice versa.</p>
+<pre class="Agda"><a id="not"></a><a id="15714" href="/Decidable/#15714" class="Function">not</a> <a id="15718" class="Symbol">:</a> <a id="15720" href="/Decidable/#1866" class="Datatype">Bool</a> <a id="15725" class="Symbol">→</a> <a id="15727" href="/Decidable/#1866" class="Datatype">Bool</a>
+<a id="15732" href="/Decidable/#15714" class="Function">not</a> <a id="15736" href="/Decidable/#1885" class="InductiveConstructor">true</a>  <a id="15742" class="Symbol">=</a> <a id="15744" href="/Decidable/#1900" class="InductiveConstructor">false</a>
+<a id="15750" href="/Decidable/#15714" class="Function">not</a> <a id="15754" href="/Decidable/#1900" class="InductiveConstructor">false</a> <a id="15760" class="Symbol">=</a> <a id="15762" href="/Decidable/#1885" class="InductiveConstructor">true</a></pre>
+<p>Correspondingly, given a decidable proposition, we
+can decide its negation.</p>
+<pre class="Agda"><a id="¬?"></a><a id="15867" href="/Decidable/#15867" class="Function">¬?</a> <a id="15870" class="Symbol">:</a> <a id="15872" class="Symbol">{</a><a id="15873" href="/Decidable/#15873" class="Bound">A</a> <a id="15875" class="Symbol">:</a> <a id="15877" class="PrimitiveType">Set</a><a id="15880" class="Symbol">}</a> <a id="15882" class="Symbol">→</a> <a id="15884" href="/Decidable/#7116" class="Datatype">Dec</a> <a id="15888" href="/Decidable/#15873" class="Bound">A</a> <a id="15890" class="Symbol">→</a> <a id="15892" href="/Decidable/#7116" class="Datatype">Dec</a> <a id="15896" class="Symbol">(</a><a id="15897" href="https://agda.github.io/agda-stdlib/Relation.Nullary.html#464" class="Function Operator">¬</a> <a id="15899" href="/Decidable/#15873" class="Bound">A</a><a id="15900" class="Symbol">)</a>
+<a id="15902" href="/Decidable/#15867" class="Function">¬?</a> <a id="15905" class="Symbol">(</a><a id="15906" href="/Decidable/#7144" class="InductiveConstructor">yes</a> <a id="15910" href="/Decidable/#15910" class="Bound">x</a><a id="15911" class="Symbol">)</a>  <a id="15914" class="Symbol">=</a>  <a id="15917" href="/Decidable/#7162" class="InductiveConstructor">no</a> <a id="15920" class="Symbol">(</a><a id="15921" href="https://agda.github.io/agda-stdlib/Relation.Nullary.Negation.html#560" class="Function">¬¬-intro</a> <a id="15930" href="/Decidable/#15910" class="Bound">x</a><a id="15931" class="Symbol">)</a>
+<a id="15933" href="/Decidable/#15867" class="Function">¬?</a> <a id="15936" class="Symbol">(</a><a id="15937" href="/Decidable/#7162" class="InductiveConstructor">no</a> <a id="15940" href="/Decidable/#15940" class="Bound">¬x</a><a id="15942" class="Symbol">)</a>  <a id="15945" class="Symbol">=</a>  <a id="15948" href="/Decidable/#7144" class="InductiveConstructor">yes</a> <a id="15952" href="/Decidable/#15940" class="Bound">¬x</a></pre>
+<p>We simply swap yes and no.  In the first equation,
+the right-hand side asserts that the negation of <code class="highlighter-rouge">¬ A</code> holds,
+in other words, that <code class="highlighter-rouge">¬ ¬ A</code> holds, which is an easy consequence
+of the fact that <code class="highlighter-rouge">A</code> holds.</p>
+
+<p>There is also a slightly less familiar connective,
+corresponding to implication.</p>
+<pre class="Agda"><a id="_⊃_"></a><a id="16267" href="/Decidable/#16267" class="Function Operator">_⊃_</a> <a id="16271" class="Symbol">:</a> <a id="16273" href="/Decidable/#1866" class="Datatype">Bool</a> <a id="16278" class="Symbol">→</a> <a id="16280" href="/Decidable/#1866" class="Datatype">Bool</a> <a id="16285" class="Symbol">→</a> <a id="16287" href="/Decidable/#1866" class="Datatype">Bool</a>
+<a id="16292" class="Symbol">_</a>     <a id="16298" href="/Decidable/#16267" class="Function Operator">⊃</a> <a id="16300" href="/Decidable/#1885" class="InductiveConstructor">true</a>   <a id="16307" class="Symbol">=</a>  <a id="16310" href="/Decidable/#1885" class="InductiveConstructor">true</a>
+<a id="16315" href="/Decidable/#1900" class="CatchallClause InductiveConstructor">false</a><a id="16320" class="CatchallClause"> </a><a id="16321" href="/Decidable/#16267" class="CatchallClause Function Operator">⊃</a><a id="16322" class="CatchallClause"> </a><a id="16323" class="CatchallClause Symbol">_</a>      <a id="16330" class="Symbol">=</a>  <a id="16333" href="/Decidable/#1885" class="InductiveConstructor">true</a>
+<a id="16338" href="/Decidable/#1885" class="InductiveConstructor">true</a>  <a id="16344" href="/Decidable/#16267" class="Function Operator">⊃</a> <a id="16346" href="/Decidable/#1900" class="InductiveConstructor">false</a>  <a id="16353" class="Symbol">=</a>  <a id="16356" href="/Decidable/#1900" class="InductiveConstructor">false</a></pre>
+<p>One boolean implies another if
+whenever the first is true then the second is true.
+Hence, the implication of two booleans is true if
+the second is true or the first is false,
+and false if the first is true and the second is false.
+In Emacs, the left-hand side of the second equation displays in grey,
+indicating that the order of the equations determines which of the
+first or the second can match.  However, regardless of which matches
+the answer is the same.</p>
+
+<p>Correspondingly, given two decidable propositions,
+we can decide if the first implies the second.</p>
+<pre class="Agda"><a id="_→-dec_"></a><a id="16946" href="/Decidable/#16946" class="Function Operator">_→-dec_</a> <a id="16954" class="Symbol">:</a> <a id="16956" class="Symbol">{</a><a id="16957" href="/Decidable/#16957" class="Bound">A</a> <a id="16959" href="/Decidable/#16959" class="Bound">B</a> <a id="16961" class="Symbol">:</a> <a id="16963" class="PrimitiveType">Set</a><a id="16966" class="Symbol">}</a> <a id="16968" class="Symbol">→</a> <a id="16970" href="/Decidable/#7116" class="Datatype">Dec</a> <a id="16974" href="/Decidable/#16957" class="Bound">A</a> <a id="16976" class="Symbol">→</a> <a id="16978" href="/Decidable/#7116" class="Datatype">Dec</a> <a id="16982" href="/Decidable/#16959" class="Bound">B</a> <a id="16984" class="Symbol">→</a> <a id="16986" href="/Decidable/#7116" class="Datatype">Dec</a> <a id="16990" class="Symbol">(</a><a id="16991" href="/Decidable/#16957" class="Bound">A</a> <a id="16993" class="Symbol">→</a> <a id="16995" href="/Decidable/#16959" class="Bound">B</a><a id="16996" class="Symbol">)</a>
+<a id="16998" class="Symbol">_</a>     <a id="17004" href="/Decidable/#16946" class="Function Operator">→-dec</a> <a id="17010" href="/Decidable/#7144" class="InductiveConstructor">yes</a> <a id="17014" href="/Decidable/#17014" class="Bound">y</a>  <a id="17017" class="Symbol">=</a>  <a id="17020" href="/Decidable/#7144" class="InductiveConstructor">yes</a> <a id="17024" class="Symbol">(λ</a> <a id="17027" href="/Decidable/#17027" class="Bound">_</a> <a id="17029" class="Symbol">→</a> <a id="17031" href="/Decidable/#17014" class="Bound">y</a><a id="17032" class="Symbol">)</a>
+<a id="17034" href="/Decidable/#7162" class="CatchallClause InductiveConstructor">no</a><a id="17036" class="CatchallClause"> </a><a id="17037" href="/Decidable/#17037" class="CatchallClause Bound">¬x</a><a id="17039" class="CatchallClause"> </a><a id="17040" href="/Decidable/#16946" class="CatchallClause Function Operator">→-dec</a><a id="17045" class="CatchallClause"> </a><a id="17046" class="CatchallClause Symbol">_</a>      <a id="17053" class="Symbol">=</a>  <a id="17056" href="/Decidable/#7144" class="InductiveConstructor">yes</a> <a id="17060" class="Symbol">(λ</a> <a id="17063" href="/Decidable/#17063" class="Bound">x</a> <a id="17065" class="Symbol">→</a> <a id="17067" href="https://agda.github.io/agda-stdlib/Data.Empty.html#360" class="Function">⊥-elim</a> <a id="17074" class="Symbol">(</a><a id="17075" href="/Decidable/#17037" class="Bound">¬x</a> <a id="17078" href="/Decidable/#17063" class="Bound">x</a><a id="17079" class="Symbol">))</a>
+<a id="17082" href="/Decidable/#7144" class="InductiveConstructor">yes</a> <a id="17086" href="/Decidable/#17086" class="Bound">x</a> <a id="17088" href="/Decidable/#16946" class="Function Operator">→-dec</a> <a id="17094" href="/Decidable/#7162" class="InductiveConstructor">no</a> <a id="17097" href="/Decidable/#17097" class="Bound">¬y</a>  <a id="17101" class="Symbol">=</a>  <a id="17104" href="/Decidable/#7162" class="InductiveConstructor">no</a> <a id="17107" class="Symbol">(λ</a> <a id="17110" href="/Decidable/#17110" class="Bound">f</a> <a id="17112" class="Symbol">→</a> <a id="17114" href="/Decidable/#17097" class="Bound">¬y</a> <a id="17117" class="Symbol">(</a><a id="17118" href="/Decidable/#17110" class="Bound">f</a> <a id="17120" href="/Decidable/#17086" class="Bound">x</a><a id="17121" class="Symbol">))</a></pre>
+<p>The implication holds if either the second holds or
+the negatioin of the first holds, and its negation
+holds if the first holds and the negation of the second holds.
+Evidence for the implication is a function from evidence
+of the first to evidence of the second.
+If the second holds, the function returns the evidence for it.
+If the negation of the first holds, the function takes the
+evidence of the first and derives a contradiction.
+If the first holds and the negation of the second holds,
+given evidence of the implication we must derive a contradiction;
+we apply the evidence of the implication <code class="highlighter-rouge">f</code> to the evidence of the
+first <code class="highlighter-rouge">x</code>, yielding a contradiction with the evidence <code class="highlighter-rouge">¬y</code> of
+the negation of the second.</p>
+
+<p>Again in Emacs, the left-hand side of the second equation displays in grey,
+indicating that the order of the equations determines which of the
+first or the second can match.  This time the answer is different depending
+on which matches; but either is equally valid.</p>
+
+<h2 id="decidability-of-all">Decidability of All</h2>
+
+<p>Recall that in Chapter <a href="/Lists/#All">Lists</a>
+we defined a predicate <code class="highlighter-rouge">All P</code> that holds if a given predicate is satisfied by every element of a list.</p>
+<pre class="Agda"><a id="18345" class="Keyword">data</a> <a id="All"></a><a id="18350" href="/Decidable/#18350" class="Datatype">All</a> <a id="18354" class="Symbol">{</a><a id="18355" href="/Decidable/#18355" class="Bound">A</a> <a id="18357" class="Symbol">:</a> <a id="18359" class="PrimitiveType">Set</a><a id="18362" class="Symbol">}</a> <a id="18364" class="Symbol">(</a><a id="18365" href="/Decidable/#18365" class="Bound">P</a> <a id="18367" class="Symbol">:</a> <a id="18369" href="/Decidable/#18355" class="Bound">A</a> <a id="18371" class="Symbol">→</a> <a id="18373" class="PrimitiveType">Set</a><a id="18376" class="Symbol">)</a> <a id="18378" class="Symbol">:</a> <a id="18380" href="https://agda.github.io/agda-stdlib/Agda.Builtin.List.html#80" class="Datatype">List</a> <a id="18385" href="/Decidable/#18355" class="Bound">A</a> <a id="18387" class="Symbol">→</a> <a id="18389" class="PrimitiveType">Set</a> <a id="18393" class="Keyword">where</a>
+  <a id="All.[]"></a><a id="18401" href="/Decidable/#18401" class="InductiveConstructor">[]</a> <a id="18404" class="Symbol">:</a> <a id="18406" href="/Decidable/#18350" class="Datatype">All</a> <a id="18410" href="/Decidable/#18365" class="Bound">P</a> <a id="18412" href="https://agda.github.io/agda-stdlib/Agda.Builtin.List.html#117" class="InductiveConstructor">[]</a>
+  <a id="All._∷_"></a><a id="18417" href="/Decidable/#18417" class="InductiveConstructor Operator">_∷_</a> <a id="18421" class="Symbol">:</a> <a id="18423" class="Symbol">{</a><a id="18424" href="/Decidable/#18424" class="Bound">x</a> <a id="18426" class="Symbol">:</a> <a id="18428" href="/Decidable/#18355" class="Bound">A</a><a id="18429" class="Symbol">}</a> <a id="18431" class="Symbol">{</a><a id="18432" href="/Decidable/#18432" class="Bound">xs</a> <a id="18435" class="Symbol">:</a> <a id="18437" href="https://agda.github.io/agda-stdlib/Agda.Builtin.List.html#80" class="Datatype">List</a> <a id="18442" href="/Decidable/#18355" class="Bound">A</a><a id="18443" class="Symbol">}</a> <a id="18445" class="Symbol">→</a> <a id="18447" href="/Decidable/#18365" class="Bound">P</a> <a id="18449" href="/Decidable/#18424" class="Bound">x</a> <a id="18451" class="Symbol">→</a> <a id="18453" href="/Decidable/#18350" class="Datatype">All</a> <a id="18457" href="/Decidable/#18365" class="Bound">P</a> <a id="18459" href="/Decidable/#18432" class="Bound">xs</a> <a id="18462" class="Symbol">→</a> <a id="18464" href="/Decidable/#18350" class="Datatype">All</a> <a id="18468" href="/Decidable/#18365" class="Bound">P</a> <a id="18470" class="Symbol">(</a><a id="18471" href="/Decidable/#18424" class="Bound">x</a> <a id="18473" href="https://agda.github.io/agda-stdlib/Agda.Builtin.List.html#132" class="InductiveConstructor Operator">∷</a> <a id="18475" href="/Decidable/#18432" class="Bound">xs</a><a id="18477" class="Symbol">)</a></pre>
+
+<p>If instead we consider a predicate as a function that yields a boolean,
+it is easy to define an analogue of <code class="highlighter-rouge">All</code>, which returns true if
+a given predicate returns true for every element of a list.</p>
+<pre class="Agda"><a id="all"></a><a id="18701" href="/Decidable/#18701" class="Function">all</a> <a id="18705" class="Symbol">:</a> <a id="18707" class="Symbol">∀</a> <a id="18709" class="Symbol">{</a><a id="18710" href="/Decidable/#18710" class="Bound">A</a> <a id="18712" class="Symbol">:</a> <a id="18714" class="PrimitiveType">Set</a><a id="18717" class="Symbol">}</a> <a id="18719" class="Symbol">→</a> <a id="18721" class="Symbol">(</a><a id="18722" href="/Decidable/#18710" class="Bound">A</a> <a id="18724" class="Symbol">→</a> <a id="18726" href="/Decidable/#1866" class="Datatype">Bool</a><a id="18730" class="Symbol">)</a> <a id="18732" class="Symbol">→</a> <a id="18734" href="https://agda.github.io/agda-stdlib/Agda.Builtin.List.html#80" class="Datatype">List</a> <a id="18739" href="/Decidable/#18710" class="Bound">A</a> <a id="18741" class="Symbol">→</a> <a id="18743" href="/Decidable/#1866" class="Datatype">Bool</a>
+<a id="18748" href="/Decidable/#18701" class="Function">all</a> <a id="18752" href="/Decidable/#18752" class="Bound">p</a>  <a id="18755" class="Symbol">=</a>  <a id="18758" href="https://agda.github.io/agda-stdlib/Data.List.Base.html#2376" class="Function">foldr</a> <a id="18764" href="/Decidable/#12981" class="Function Operator">_∧_</a> <a id="18768" href="/Decidable/#1885" class="InductiveConstructor">true</a> <a id="18773" href="https://agda.github.io/agda-stdlib/Function.html#759" class="Function Operator">∘</a> <a id="18775" href="https://agda.github.io/agda-stdlib/Data.List.Base.html#1057" class="Function">map</a> <a id="18779" href="/Decidable/#18752" class="Bound">p</a></pre>
+<p>The function can be written in a particularly compact style by
+using the higher-order functions <code class="highlighter-rouge">map</code> and <code class="highlighter-rouge">foldr</code> as defined in
+the sections on <a href="/Lists/#Map">Map</a> and <a href="/Lists/#Fold">Fold</a>.</p>
+
+<p>As one would hope, if we replace booleans by decidables there is again
+an analogue of <code class="highlighter-rouge">All</code>.  First, return to the notion of a predicate <code class="highlighter-rouge">P</code> as
+a function of type <code class="highlighter-rouge">A → Set</code>, taking a value <code class="highlighter-rouge">x</code> of type <code class="highlighter-rouge">A</code> into evidence
+<code class="highlighter-rouge">P x</code> that a property holds for <code class="highlighter-rouge">x</code>.  Say that a predicate <code class="highlighter-rouge">P</code> is <em>decidable</em>
+if we have a function that for a given <code class="highlighter-rouge">x</code> can decide <code class="highlighter-rouge">P x</code>.</p>
+<pre class="Agda"><a id="Decidable"></a><a id="19431" href="/Decidable/#19431" class="Function">Decidable</a> <a id="19441" class="Symbol">:</a> <a id="19443" class="Symbol">∀</a> <a id="19445" class="Symbol">{</a><a id="19446" href="/Decidable/#19446" class="Bound">A</a> <a id="19448" class="Symbol">:</a> <a id="19450" class="PrimitiveType">Set</a><a id="19453" class="Symbol">}</a> <a id="19455" class="Symbol">→</a> <a id="19457" class="Symbol">(</a><a id="19458" href="/Decidable/#19446" class="Bound">A</a> <a id="19460" class="Symbol">→</a> <a id="19462" class="PrimitiveType">Set</a><a id="19465" class="Symbol">)</a> <a id="19467" class="Symbol">→</a> <a id="19469" class="PrimitiveType">Set</a>
+<a id="19473" href="/Decidable/#19431" class="Function">Decidable</a> <a id="19483" class="Symbol">{</a><a id="19484" href="/Decidable/#19484" class="Bound">A</a><a id="19485" class="Symbol">}</a> <a id="19487" href="/Decidable/#19487" class="Bound">P</a>  <a id="19490" class="Symbol">=</a>  <a id="19493" class="Symbol">∀</a> <a id="19495" class="Symbol">(</a><a id="19496" href="/Decidable/#19496" class="Bound">x</a> <a id="19498" class="Symbol">:</a> <a id="19500" href="/Decidable/#19484" class="Bound">A</a><a id="19501" class="Symbol">)</a> <a id="19503" class="Symbol">→</a> <a id="19505" href="/Decidable/#7116" class="Datatype">Dec</a> <a id="19509" class="Symbol">(</a><a id="19510" href="/Decidable/#19487" class="Bound">P</a> <a id="19512" href="/Decidable/#19496" class="Bound">x</a><a id="19513" class="Symbol">)</a></pre>
+<p>Then if predicate <code class="highlighter-rouge">P</code> is decidable, it is also decidable whether every
+element of a list satisfies the predicate.</p>
+<pre class="Agda"><a id="All?"></a><a id="19653" href="/Decidable/#19653" class="Function">All?</a> <a id="19658" class="Symbol">:</a> <a id="19660" class="Symbol">∀</a> <a id="19662" class="Symbol">{</a><a id="19663" href="/Decidable/#19663" class="Bound">A</a> <a id="19665" class="Symbol">:</a> <a id="19667" class="PrimitiveType">Set</a><a id="19670" class="Symbol">}</a> <a id="19672" class="Symbol">{</a><a id="19673" href="/Decidable/#19673" class="Bound">P</a> <a id="19675" class="Symbol">:</a> <a id="19677" href="/Decidable/#19663" class="Bound">A</a> <a id="19679" class="Symbol">→</a> <a id="19681" class="PrimitiveType">Set</a><a id="19684" class="Symbol">}</a> <a id="19686" class="Symbol">→</a> <a id="19688" href="/Decidable/#19431" class="Function">Decidable</a> <a id="19698" href="/Decidable/#19673" class="Bound">P</a> <a id="19700" class="Symbol">→</a> <a id="19702" href="/Decidable/#19431" class="Function">Decidable</a> <a id="19712" class="Symbol">(</a><a id="19713" href="/Decidable/#18350" class="Datatype">All</a> <a id="19717" href="/Decidable/#19673" class="Bound">P</a><a id="19718" class="Symbol">)</a>
+<a id="19720" href="/Decidable/#19653" class="Function">All?</a> <a id="19725" href="/Decidable/#19725" class="Bound">P?</a> <a id="19728" href="https://agda.github.io/agda-stdlib/Agda.Builtin.List.html#117" class="InductiveConstructor">[]</a> <a id="19731" class="Symbol">=</a> <a id="19733" href="/Decidable/#7144" class="InductiveConstructor">yes</a> <a id="19737" href="/Decidable/#18401" class="InductiveConstructor">[]</a>
+<a id="19740" href="/Decidable/#19653" class="Function">All?</a> <a id="19745" href="/Decidable/#19745" class="Bound">P?</a> <a id="19748" class="Symbol">(</a><a id="19749" href="/Decidable/#19749" class="Bound">x</a> <a id="19751" href="https://agda.github.io/agda-stdlib/Agda.Builtin.List.html#132" class="InductiveConstructor Operator">∷</a> <a id="19753" href="/Decidable/#19753" class="Bound">xs</a><a id="19755" class="Symbol">)</a> <a id="19757" class="Keyword">with</a> <a id="19762" href="/Decidable/#19745" class="Bound">P?</a> <a id="19765" href="/Decidable/#19749" class="Bound">x</a>   <a id="19769" class="Symbol">|</a> <a id="19771" href="/Decidable/#19653" class="Function">All?</a> <a id="19776" href="/Decidable/#19745" class="Bound">P?</a> <a id="19779" href="/Decidable/#19753" class="Bound">xs</a>
+<a id="19782" class="Symbol">...</a>                 <a id="19802" class="Symbol">|</a> <a id="19804" href="/Decidable/#7144" class="InductiveConstructor">yes</a> <a id="19808" href="/Decidable/#19808" class="Bound">Px</a> <a id="19811" class="Symbol">|</a> <a id="19813" href="/Decidable/#7144" class="InductiveConstructor">yes</a> <a id="19817" href="/Decidable/#19817" class="Bound">Pxs</a>     <a id="19825" class="Symbol">=</a> <a id="19827" href="/Decidable/#7144" class="InductiveConstructor">yes</a> <a id="19831" class="Symbol">(</a><a id="19832" href="/Decidable/#19808" class="Bound">Px</a> <a id="19835" href="/Decidable/#18417" class="InductiveConstructor Operator">∷</a> <a id="19837" href="/Decidable/#19817" class="Bound">Pxs</a><a id="19840" class="Symbol">)</a>
+<a id="19842" class="Symbol">...</a>                 <a id="19862" class="Symbol">|</a> <a id="19864" href="/Decidable/#7162" class="InductiveConstructor">no</a> <a id="19867" href="/Decidable/#19867" class="Bound">¬Px</a> <a id="19871" class="Symbol">|</a> <a id="19873" class="Symbol">_</a>           <a id="19885" class="Symbol">=</a> <a id="19887" href="/Decidable/#7162" class="InductiveConstructor">no</a> <a id="19890" class="Symbol">λ{</a> <a id="19893" class="Symbol">(</a><a id="19894" href="/Decidable/#19894" class="Bound">Px</a> <a id="19897" href="/Decidable/#18417" class="InductiveConstructor Operator">∷</a> <a id="19899" href="/Decidable/#19899" class="Bound">Pxs</a><a id="19902" class="Symbol">)</a> <a id="19904" class="Symbol">→</a> <a id="19906" href="/Decidable/#19867" class="Bound">¬Px</a> <a id="19910" href="/Decidable/#19894" class="Bound">Px</a>   <a id="19915" class="Symbol">}</a>
+<a id="19917" class="CatchallClause Symbol">...</a><a id="19920" class="CatchallClause">                 </a><a id="19937" class="CatchallClause Symbol">|</a><a id="19938" class="CatchallClause"> </a><a id="19939" class="CatchallClause Symbol">_</a><a id="19940" class="CatchallClause">      </a><a id="19946" class="CatchallClause Symbol">|</a><a id="19947" class="CatchallClause"> </a><a id="19948" href="/Decidable/#7162" class="CatchallClause InductiveConstructor">no</a><a id="19950" class="CatchallClause"> </a><a id="19951" href="/Decidable/#19951" class="CatchallClause Bound">¬Pxs</a>     <a id="19960" class="Symbol">=</a> <a id="19962" href="/Decidable/#7162" class="InductiveConstructor">no</a> <a id="19965" class="Symbol">λ{</a> <a id="19968" class="Symbol">(</a><a id="19969" href="/Decidable/#19969" class="Bound">Px</a> <a id="19972" href="/Decidable/#18417" class="InductiveConstructor Operator">∷</a> <a id="19974" href="/Decidable/#19974" class="Bound">Pxs</a><a id="19977" class="Symbol">)</a> <a id="19979" class="Symbol">→</a> <a id="19981" href="/Decidable/#19951" class="Bound">¬Pxs</a> <a id="19986" href="/Decidable/#19974" class="Bound">Pxs</a> <a id="19990" class="Symbol">}</a></pre>
+<p>If the list is empty, then trivially <code class="highlighter-rouge">P</code> holds for every element of
+the list.  Otherwise, the structure of the proof is similar to that
+showing that the conjuction of two decidable propositions is itself
+decidable, using <code class="highlighter-rouge">_∷_</code> rather than <code class="highlighter-rouge">⟨_,_⟩</code> to combine the evidence for
+the head and tail of the list.</p>
+
+<p>###Exercise (<code class="highlighter-rouge">any</code> <code class="highlighter-rouge">any?</code>)</p>
+
+<p>Just as <code class="highlighter-rouge">All</code> has analogues <code class="highlighter-rouge">all</code> and <code class="highlighter-rouge">all?</code> which determine whether a
+predicate holds for every element of a list, so does <code class="highlighter-rouge">Any</code> have
+analogues <code class="highlighter-rouge">any</code> and <code class="highlighter-rouge">any?</code> which determine whether a predicates holds
+for some element of a list.  Give their definitions.</p>
+
+<h2 id="standard-library">Standard Library</h2>
+
+<pre class="Agda"><a id="20631" class="Keyword">import</a> <a id="20638" href="https://agda.github.io/agda-stdlib/Data.Bool.Base.html" class="Module">Data.Bool.Base</a> <a id="20653" class="Keyword">using</a> <a id="20659" class="Symbol">(</a><a id="20660" href="https://agda.github.io/agda-stdlib/Agda.Builtin.Bool.html#67" class="Datatype">Bool</a><a id="20664" class="Symbol">;</a> <a id="20666" href="https://agda.github.io/agda-stdlib/Data.Bool.Base.html#791" class="Function">T</a><a id="20667" class="Symbol">;</a> <a id="20669" href="https://agda.github.io/agda-stdlib/Data.Bool.Base.html#939" class="Function Operator">_∧_</a><a id="20672" class="Symbol">;</a> <a id="20674" href="https://agda.github.io/agda-stdlib/Data.Bool.Base.html#997" class="Function Operator">_∨_</a><a id="20677" class="Symbol">;</a> <a id="20679" href="https://agda.github.io/agda-stdlib/Data.Bool.Base.html#657" class="Function">not</a><a id="20682" class="Symbol">)</a>
+<a id="20684" class="Keyword">import</a> <a id="20691" href="https://agda.github.io/agda-stdlib/Data.Nat.Base.html" class="Module">Data.Nat.Base</a> <a id="20705" class="Keyword">using</a> <a id="20711" class="Symbol">(</a><a id="20712" href="https://agda.github.io/agda-stdlib/Data.Nat.Base.html#3179" class="Function Operator">_≤?_</a><a id="20716" class="Symbol">)</a>
+<a id="20718" class="Keyword">import</a> <a id="20725" href="https://agda.github.io/agda-stdlib/Data.List.All.html" class="Module">Data.List.All</a> <a id="20739" class="Keyword">using</a> <a id="20745" class="Symbol">(</a><a id="20746" href="https://agda.github.io/agda-stdlib/Data.List.All.html#763" class="Datatype">All</a><a id="20749" class="Symbol">;</a> <a id="20751" href="https://agda.github.io/agda-stdlib/Data.List.All.html#841" class="InductiveConstructor">[]</a><a id="20753" class="Symbol">;</a> <a id="20755" href="https://agda.github.io/agda-stdlib/Data.List.All.html#858" class="InductiveConstructor Operator">_∷_</a><a id="20758" class="Symbol">)</a> <a id="20760" class="Keyword">renaming</a> <a id="20769" class="Symbol">(</a><a id="20770" href="https://agda.github.io/agda-stdlib/Data.List.All.html#2064" class="Function">all</a> <a id="20774" class="Symbol">to</a> <a id="20777" href="https://agda.github.io/agda-stdlib/Data.List.All.html#2064" class="Function">All?</a><a id="20781" class="Symbol">)</a>
+<a id="20783" class="Keyword">import</a> <a id="20790" href="https://agda.github.io/agda-stdlib/Relation.Nullary.html" class="Module">Relation.Nullary</a> <a id="20807" class="Keyword">using</a> <a id="20813" class="Symbol">(</a><a id="20814" href="https://agda.github.io/agda-stdlib/Relation.Nullary.html#534" class="Datatype">Dec</a><a id="20817" class="Symbol">;</a> <a id="20819" href="https://agda.github.io/agda-stdlib/Relation.Nullary.html#570" class="InductiveConstructor">yes</a><a id="20822" class="Symbol">;</a> <a id="20824" href="https://agda.github.io/agda-stdlib/Relation.Nullary.html#597" class="InductiveConstructor">no</a><a id="20826" class="Symbol">)</a>
+<a id="20828" class="Keyword">import</a> <a id="20835" href="https://agda.github.io/agda-stdlib/Relation.Nullary.Decidable.html" class="Module">Relation.Nullary.Decidable</a> <a id="20862" class="Keyword">using</a> <a id="20868" class="Symbol">(</a><a id="20869" href="https://agda.github.io/agda-stdlib/Relation.Nullary.Decidable.html#822" class="Function Operator">⌊_⌋</a><a id="20872" class="Symbol">;</a> <a id="20874" href="https://agda.github.io/agda-stdlib/Relation.Nullary.Decidable.html#1055" class="Function">toWitness</a><a id="20883" class="Symbol">;</a> <a id="20885" href="https://agda.github.io/agda-stdlib/Relation.Nullary.Decidable.html#1209" class="Function">fromWitness</a><a id="20896" class="Symbol">)</a>
+<a id="20898" class="Keyword">import</a> <a id="20905" href="https://agda.github.io/agda-stdlib/Relation.Nullary.Negation.html" class="Module">Relation.Nullary.Negation</a> <a id="20931" class="Keyword">using</a> <a id="20937" class="Symbol">(</a><a id="20938" href="https://agda.github.io/agda-stdlib/Relation.Nullary.Negation.html#1017" class="Function">¬?</a><a id="20940" class="Symbol">)</a>
+<a id="20942" class="Keyword">import</a> <a id="20949" href="https://agda.github.io/agda-stdlib/Relation.Nullary.Product.html" class="Module">Relation.Nullary.Product</a> <a id="20974" class="Keyword">using</a> <a id="20980" class="Symbol">(</a><a id="20981" href="https://agda.github.io/agda-stdlib/Relation.Nullary.Product.html#394" class="Function Operator">_×-dec_</a><a id="20988" class="Symbol">)</a>
+<a id="20990" class="Keyword">import</a> <a id="20997" href="https://agda.github.io/agda-stdlib/Relation.Nullary.Sum.html" class="Module">Relation.Nullary.Sum</a> <a id="21018" class="Keyword">using</a> <a id="21024" class="Symbol">(</a><a id="21025" href="https://agda.github.io/agda-stdlib/Relation.Nullary.Sum.html#537" class="Function Operator">_⊎-dec_</a><a id="21032" class="Symbol">)</a></pre>
+
+<h2 id="unicode">Unicode</h2>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>∧  U+2227  LOGICAL AND (\and, \wedge)
+∨  U+2228  LOGICAL OR (\or, \vee)
+⊃  U+2283  SUPERSET OF (\sup)
+ᵇ  U+1D47  MODIFIER LETTER SMALL B  (\^b)
+</code></pre></div></div>
+
+  </div>
+
+</article>
+
+      </div>
+    </main><footer class="site-footer h-card">
+  <data class="u-url" href="/"></data>
+
+  <div class="wrapper">
+
+    <h2 class="footer-heading">Programming Language Foundations in Agda
+</h2><div class="footer-col-wrapper">
+      <div class="footer-col footer-col-1">
+        <ul class="contact-list">
+          <li class="p-name">Wen Kokke</li><li><a class="u-email" href="mailto:wen.kokke@ed.ac.uk">wen.kokke@ed.ac.uk</a></li></ul>
+      </div>
+
+      <div class="footer-col footer-col-2"><ul class="social-media-list"><li><a href="https://github.com/wenkokke"><svg class="svg-icon"><use xlink:href="/assets/minima-social-icons.svg#github"></use></svg> <span class="username">wenkokke</span></a></li><li><a href="https://www.twitter.com/wenkokke"><svg class="svg-icon"><use xlink:href="/assets/minima-social-icons.svg#twitter"></use></svg> <span class="username">wenkokke</span></a></li></ul>
+</div>
+
+      <div class="footer-col footer-col-3"></div>
+    </div><div class="footer-col-wrapper">
+      <div class="footer-col footer-col-1">
+        <ul class="contact-list">
+          <li class="p-name">Philip Wadler</li><li><a class="u-email" href="mailto:wadler@inf.ed.ac.uk">wadler@inf.ed.ac.uk</a></li></ul>
+      </div>
+
+      <div class="footer-col footer-col-2"><ul class="social-media-list"><li><a href="https://github.com/wadler"><svg class="svg-icon"><use xlink:href="/assets/minima-social-icons.svg#github"></use></svg> <span class="username">wadler</span></a></li><li><a href="https://www.twitter.com/philipwadler"><svg class="svg-icon"><use xlink:href="/assets/minima-social-icons.svg#twitter"></use></svg> <span class="username">philipwadler</span></a></li></ul>
+</div>
+
+      <div class="footer-col footer-col-3"></div>
+    </div></div>
+
+</footer>
+<!-- Import jQuery -->
+<script type="text/javascript" src="/assets/jquery.js"></script>
+
+<!-- Script which allows for foldable code blocks -->
+<script type="text/javascript">
+ $('div.foldable pre').each(function(){
+     var autoHeight = $(this).height();
+     var lineHeight = parseFloat($(this).css('line-height'));
+
+     var plus    = $("<div></div>");
+     var horLine = $("<div></div>");
+     var verLine = $("<div></div>");
+     $(this).prepend(plus);
+     plus.css({
+         'position'         : 'relative',
+         'float'            : 'right',
+         'right'            : '-' + (0.5 * lineHeight - 1.5) + 'px',
+         'width'            : lineHeight,
+         'height'           : lineHeight});
+     verLine.css({
+         'position'         : 'relative',
+         'height'           : lineHeight,
+         'width'            : '3px',
+         'background-color' : '#C1E0FF'});
+     horLine.css({
+         'position'         : 'relative',
+         'top'              : '-' + (0.5 * lineHeight + 1.5) + 'px',
+         'left'             : '-' + (0.5 * lineHeight - 1.5) + 'px',
+         'height'           : '3px',
+         'width'            : lineHeight,
+         'background-color' : '#C1E0FF'});
+     plus.append(verLine);
+     plus.append(horLine);
+
+     $(this).height(2.0 * lineHeight);
+     $(this).css('overflow','hidden');
+
+     $(this).click(function(){
+         if ($(this).height() == autoHeight) {
+             $(this).height(2.0 * lineHeight);
+             plus.show();
+         }
+         else {
+             $(this).height('auto');
+             plus.hide();
+         }
+     });
+ });
+</script>
+
+<!-- Import KaTeX -->
+<script type="text/javascript" src="/assets/katex.js"></script>
+
+<!-- Script which renders TeX using KaTeX -->
+<script type="text/javascript">
+ $("script[type='math/tex']").replaceWith(
+     function(){
+         var tex = $(this).text();
+         return "<span class=\"inline-equation\">" +
+                katex.renderToString(tex) +
+                "</span>";
+     });
+ $("script[type='math/tex; mode=display']").replaceWith(
+     function(){
+         var tex = $(this).text().replace(/%.*?(\n|$)/g,"");
+         return "<div class=\"equation\">" +
+                katex.renderToString("\\displaystyle "+tex) +
+                "</div>";
+     });
+</script>
+</body>
+
+</html>

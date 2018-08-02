@@ -1,0 +1,698 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Equality: Equality and equational reasoning | Programming Language Foundations in Agda
+</title><!-- Begin Jekyll SEO tag v2.5.0 -->
+<meta name="generator" content="Jekyll v3.7.3" />
+<meta property="og:title" content="Equality: Equality and equational reasoning" />
+<meta name="author" content="Wen Kokke" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="Programming Language Foundations in Agda" />
+<meta property="og:description" content="Programming Language Foundations in Agda" />
+<link rel="canonical" href="https://plfa.ed.inf.ac.uk/Equality/" />
+<meta property="og:url" content="https://plfa.ed.inf.ac.uk/Equality/" />
+<meta property="og:site_name" content="Programming Language Foundations in Agda" />
+<script type="application/ld+json">
+{"description":"Programming Language Foundations in Agda","author":{"@type":"Person","name":"Wen Kokke"},"@type":"WebPage","url":"https://plfa.ed.inf.ac.uk/Equality/","headline":"Equality: Equality and equational reasoning","@context":"http://schema.org"}</script>
+<!-- End Jekyll SEO tag -->
+<link rel="stylesheet" href="/assets/main.css"><link type="application/atom+xml" rel="alternate" href="https://plfa.ed.inf.ac.uk/feed.xml" title="Programming Language Foundations in Agda
+" /></head>
+<body><header class="site-header" role="banner">
+
+    <div class="wrapper">
+
+        <a class="site-title" href="/">Programming Language Foundations in Agda
+</a>
+
+        <nav class="site-nav">
+            <span class="menu-icon">
+                <svg viewBox="0 0 18 15" width="18px" height="15px">
+                    <path fill="#424242" d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.031C17.335,0,18,0.665,18,1.484L18,1.484z"/>
+                    <path fill="#424242" d="M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0c0-0.82,0.665-1.484,1.484-1.484 h15.031C17.335,6.031,18,6.696,18,7.516L18,7.516z"/>
+                    <path fill="#424242" d="M18,13.516C18,14.335,17.335,15,16.516,15H1.484C0.665,15,0,14.335,0,13.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.031C17.335,12.031,18,12.696,18,13.516L18,13.516z"/>
+                </svg>
+            </span>
+
+            <div class="trigger">
+                <a class="page-link" href="/">Table of Contents</a>
+                <a class="page-link" href="/about/">About</a>
+            </div>
+        </nav>
+
+    </div>
+
+</header>
+<main class="page-content" aria-label="Content">
+      <div class="wrapper">
+        <article class="post">
+
+  <header class="post-header">
+    <h1 class="post-title">Equality: Equality and equational reasoning</h1>
+  </header>
+
+  <div class="post-content">
+    <pre class="Agda"><a id="121" class="Keyword">module</a> <a id="128" href="/Equality/" class="Module">plfa.Equality</a> <a id="142" class="Keyword">where</a></pre>
+
+<p>Much of our reasoning has involved equality.  Given two terms <code class="highlighter-rouge">M</code>
+and <code class="highlighter-rouge">N</code>, both of type <code class="highlighter-rouge">A</code>, we write <code class="highlighter-rouge">M ≡ N</code> to assert that <code class="highlighter-rouge">M</code> and <code class="highlighter-rouge">N</code>
+are interchangeable.  So far we have treated equality as a primitive,
+but in fact it can be defined as an inductive datatype.</p>
+
+<h2 id="imports">Imports</h2>
+
+<p>This chapter has no imports.  Every chapter in this book, and nearly
+every module in the Agda, imports equality.  Since we define equality
+here, any import would create a conflict.</p>
+
+<h2 id="equality">Equality</h2>
+
+<p>We declare equality as follows.</p>
+<pre class="Agda"><a id="678" class="Keyword">data</a> <a id="_≡_"></a><a id="683" href="/Equality/#683" class="Datatype Operator">_≡_</a> <a id="687" class="Symbol">{</a><a id="688" href="/Equality/#688" class="Bound">A</a> <a id="690" class="Symbol">:</a> <a id="692" class="PrimitiveType">Set</a><a id="695" class="Symbol">}</a> <a id="697" class="Symbol">(</a><a id="698" href="/Equality/#698" class="Bound">x</a> <a id="700" class="Symbol">:</a> <a id="702" href="/Equality/#688" class="Bound">A</a><a id="703" class="Symbol">)</a> <a id="705" class="Symbol">:</a> <a id="707" href="/Equality/#688" class="Bound">A</a> <a id="709" class="Symbol">→</a> <a id="711" class="PrimitiveType">Set</a> <a id="715" class="Keyword">where</a>
+  <a id="_≡_.refl"></a><a id="723" href="/Equality/#723" class="InductiveConstructor">refl</a> <a id="728" class="Symbol">:</a> <a id="730" href="/Equality/#698" class="Bound">x</a> <a id="732" href="/Equality/#683" class="Datatype Operator">≡</a> <a id="734" href="/Equality/#698" class="Bound">x</a></pre>
+<p>In other words, for any type <code class="highlighter-rouge">A</code> and for any <code class="highlighter-rouge">x</code> of type <code class="highlighter-rouge">A</code>, the
+constructor <code class="highlighter-rouge">refl</code> provides evidence that <code class="highlighter-rouge">x ≡ x</code>. Hence, every value
+is equivalent to itself, and we have no other way of showing values
+are equivalent.  The definition features an asymmetry, in that the
+first argument to <code class="highlighter-rouge">_≡_</code> is given by the parameter <code class="highlighter-rouge">x : A</code>, while the
+second is given by an index in <code class="highlighter-rouge">A → Set ℓ</code>.  This follows our policy
+of using parameters wherever possible.  The first argument to <code class="highlighter-rouge">_≡_</code>
+can be a parameter because it doesn’t vary, while the second must be
+an index, so it can be required to be equal to the first.</p>
+
+<p>We declare the precedence of equivalence as follows.</p>
+<pre class="Agda"><a id="1418" class="Keyword">infix</a> <a id="1424" class="Number">4</a> <a id="1426" href="/Equality/#683" class="Datatype Operator">_≡_</a></pre>
+<p>We set the precedence of <code class="highlighter-rouge">_≡_</code> at level 4, the same as <code class="highlighter-rouge">_≤_</code>,
+which means it binds less tightly than any arithmetic operator.
+It associates neither to the left nor right; writing <code class="highlighter-rouge">x ≡ y ≡ z</code>
+is illegal.</p>
+
+<h2 id="equality-is-an-equivalence-relation">Equality is an equivalence relation</h2>
+
+<p>An equivalence relation is one which is reflexive, symmetric, and transitive.
+Reflexivity is built-in to the definition of equivalence, via the
+constructor <code class="highlighter-rouge">refl</code>.  It is straightforward to show symmetry.</p>
+<pre class="Agda"><a id="sym"></a><a id="1904" href="/Equality/#1904" class="Function">sym</a> <a id="1908" class="Symbol">:</a> <a id="1910" class="Symbol">∀</a> <a id="1912" class="Symbol">{</a><a id="1913" href="/Equality/#1913" class="Bound">A</a> <a id="1915" class="Symbol">:</a> <a id="1917" class="PrimitiveType">Set</a><a id="1920" class="Symbol">}</a> <a id="1922" class="Symbol">{</a><a id="1923" href="/Equality/#1923" class="Bound">x</a> <a id="1925" href="/Equality/#1925" class="Bound">y</a> <a id="1927" class="Symbol">:</a> <a id="1929" href="/Equality/#1913" class="Bound">A</a><a id="1930" class="Symbol">}</a> <a id="1932" class="Symbol">→</a>  <a id="1935" href="/Equality/#1923" class="Bound">x</a> <a id="1937" href="/Equality/#683" class="Datatype Operator">≡</a> <a id="1939" href="/Equality/#1925" class="Bound">y</a> <a id="1941" class="Symbol">→</a> <a id="1943" href="/Equality/#1925" class="Bound">y</a> <a id="1945" href="/Equality/#683" class="Datatype Operator">≡</a> <a id="1947" href="/Equality/#1923" class="Bound">x</a>
+<a id="1949" href="/Equality/#1904" class="Function">sym</a> <a id="1953" href="/Equality/#723" class="InductiveConstructor">refl</a> <a id="1958" class="Symbol">=</a> <a id="1960" href="/Equality/#723" class="InductiveConstructor">refl</a></pre>
+<p>How does this proof work? The argument to <code class="highlighter-rouge">sym</code> has type <code class="highlighter-rouge">x ≡ y</code>, but
+on the left-hand side of the equation the argument has been
+instantiated to the pattern <code class="highlighter-rouge">refl</code>, which requires that <code class="highlighter-rouge">x</code> and <code class="highlighter-rouge">y</code>
+are the same.  Hence, for the right-hand side of the equation we need
+a term of type <code class="highlighter-rouge">x ≡ x</code>, and <code class="highlighter-rouge">refl</code> will do.</p>
+
+<p>It is instructive to develop <code class="highlighter-rouge">sym</code> interactively.  To start, we supply
+a variable for the argument on the left, and a hole for the body on
+the right:</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>sym : ∀ {A : Set} {x y : A} →  x ≡ y → y ≡ x
+sym e = {! !}
+</code></pre></div></div>
+
+<p>If we go into the hole and type <code class="highlighter-rouge">C-c C-,</code> then Agda reports:</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>Goal: .y ≡ .x
+————————————————————————————————————————————————————————————
+e  : .x ≡ .y
+.y : .A
+.x : .A
+.A : Set
+</code></pre></div></div>
+
+<p>If in the hole we type <code class="highlighter-rouge">C-c C-c e</code> then Agda will instantiate <code class="highlighter-rouge">e</code> to
+all possible constructors, with one equation for each. There is only
+one possible constructor:</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>sym : ∀ {A : Set} {x y : A} →  x ≡ y → y ≡ x
+sym refl = {! !}
+</code></pre></div></div>
+
+<p>If we go into the hole again and type <code class="highlighter-rouge">C-c C-,</code> then Agda now reports:</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code> Goal: .x ≡ .x
+ ————————————————————————————————————————————————————————————
+ .x : .A
+ .A : Set
+</code></pre></div></div>
+
+<p>This is the key step—Agda has worked out that <code class="highlighter-rouge">x</code> and <code class="highlighter-rouge">y</code> must be
+the same to match the pattern <code class="highlighter-rouge">refl</code>!</p>
+
+<p>Finally, if we go back into the hole and type <code class="highlighter-rouge">C-c C-r</code> it will
+instantiate the hole with the one constructor that yields a value of
+the expected type.</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>sym : ∀ {A : Set} {x y : A} →  x ≡ y → y ≡ x
+sym refl = refl
+</code></pre></div></div>
+
+<p>This completes the definition as given above.</p>
+
+<p>Transitivity is equally straightforward.</p>
+<pre class="Agda"><a id="trans"></a><a id="3560" href="/Equality/#3560" class="Function">trans</a> <a id="3566" class="Symbol">:</a> <a id="3568" class="Symbol">∀</a> <a id="3570" class="Symbol">{</a><a id="3571" href="/Equality/#3571" class="Bound">A</a> <a id="3573" class="Symbol">:</a> <a id="3575" class="PrimitiveType">Set</a><a id="3578" class="Symbol">}</a> <a id="3580" class="Symbol">{</a><a id="3581" href="/Equality/#3581" class="Bound">x</a> <a id="3583" href="/Equality/#3583" class="Bound">y</a> <a id="3585" href="/Equality/#3585" class="Bound">z</a> <a id="3587" class="Symbol">:</a> <a id="3589" href="/Equality/#3571" class="Bound">A</a><a id="3590" class="Symbol">}</a> <a id="3592" class="Symbol">→</a> <a id="3594" href="/Equality/#3581" class="Bound">x</a> <a id="3596" href="/Equality/#683" class="Datatype Operator">≡</a> <a id="3598" href="/Equality/#3583" class="Bound">y</a> <a id="3600" class="Symbol">→</a> <a id="3602" href="/Equality/#3583" class="Bound">y</a> <a id="3604" href="/Equality/#683" class="Datatype Operator">≡</a> <a id="3606" href="/Equality/#3585" class="Bound">z</a> <a id="3608" class="Symbol">→</a> <a id="3610" href="/Equality/#3581" class="Bound">x</a> <a id="3612" href="/Equality/#683" class="Datatype Operator">≡</a> <a id="3614" href="/Equality/#3585" class="Bound">z</a>
+<a id="3616" href="/Equality/#3560" class="Function">trans</a> <a id="3622" href="/Equality/#723" class="InductiveConstructor">refl</a> <a id="3627" href="/Equality/#723" class="InductiveConstructor">refl</a> <a id="3632" class="Symbol">=</a> <a id="3634" href="/Equality/#723" class="InductiveConstructor">refl</a></pre>
+<p>Again, a useful exercise is to carry out an interactive development, checking
+how Agda’s knowledge changes as each of the two arguments is
+instantiated.</p>
+
+<h2 id="cong">Congruence and substitution</h2>
+
+<p>Equality satisfies <em>congruence</em>.  If two terms are equal,
+they remain so after the same function is applied to both.</p>
+<pre class="Agda"><a id="cong"></a><a id="3974" href="/Equality/#3974" class="Function">cong</a> <a id="3979" class="Symbol">:</a> <a id="3981" class="Symbol">∀</a> <a id="3983" class="Symbol">{</a><a id="3984" href="/Equality/#3984" class="Bound">A</a> <a id="3986" href="/Equality/#3986" class="Bound">B</a> <a id="3988" class="Symbol">:</a> <a id="3990" class="PrimitiveType">Set</a><a id="3993" class="Symbol">}</a> <a id="3995" class="Symbol">(</a><a id="3996" href="/Equality/#3996" class="Bound">f</a> <a id="3998" class="Symbol">:</a> <a id="4000" href="/Equality/#3984" class="Bound">A</a> <a id="4002" class="Symbol">→</a> <a id="4004" href="/Equality/#3986" class="Bound">B</a><a id="4005" class="Symbol">)</a> <a id="4007" class="Symbol">{</a><a id="4008" href="/Equality/#4008" class="Bound">x</a> <a id="4010" href="/Equality/#4010" class="Bound">y</a> <a id="4012" class="Symbol">:</a> <a id="4014" href="/Equality/#3984" class="Bound">A</a><a id="4015" class="Symbol">}</a> <a id="4017" class="Symbol">→</a> <a id="4019" href="/Equality/#4008" class="Bound">x</a> <a id="4021" href="/Equality/#683" class="Datatype Operator">≡</a> <a id="4023" href="/Equality/#4010" class="Bound">y</a> <a id="4025" class="Symbol">→</a> <a id="4027" href="/Equality/#3996" class="Bound">f</a> <a id="4029" href="/Equality/#4008" class="Bound">x</a> <a id="4031" href="/Equality/#683" class="Datatype Operator">≡</a> <a id="4033" href="/Equality/#3996" class="Bound">f</a> <a id="4035" href="/Equality/#4010" class="Bound">y</a>
+<a id="4037" href="/Equality/#3974" class="Function">cong</a> <a id="4042" href="/Equality/#4042" class="Bound">f</a> <a id="4044" href="/Equality/#723" class="InductiveConstructor">refl</a> <a id="4049" class="Symbol">=</a> <a id="4051" href="/Equality/#723" class="InductiveConstructor">refl</a></pre>
+
+<p>Congruence of functions with two arguments is similar.</p>
+<pre class="Agda"><a id="cong₂"></a><a id="4136" href="/Equality/#4136" class="Function">cong₂</a> <a id="4142" class="Symbol">:</a> <a id="4144" class="Symbol">∀</a> <a id="4146" class="Symbol">{</a><a id="4147" href="/Equality/#4147" class="Bound">A</a> <a id="4149" href="/Equality/#4149" class="Bound">B</a> <a id="4151" href="/Equality/#4151" class="Bound">C</a> <a id="4153" class="Symbol">:</a> <a id="4155" class="PrimitiveType">Set</a><a id="4158" class="Symbol">}</a> <a id="4160" class="Symbol">(</a><a id="4161" href="/Equality/#4161" class="Bound">f</a> <a id="4163" class="Symbol">:</a> <a id="4165" href="/Equality/#4147" class="Bound">A</a> <a id="4167" class="Symbol">→</a> <a id="4169" href="/Equality/#4149" class="Bound">B</a> <a id="4171" class="Symbol">→</a> <a id="4173" href="/Equality/#4151" class="Bound">C</a><a id="4174" class="Symbol">)</a> <a id="4176" class="Symbol">{</a><a id="4177" href="/Equality/#4177" class="Bound">u</a> <a id="4179" href="/Equality/#4179" class="Bound">x</a> <a id="4181" class="Symbol">:</a> <a id="4183" href="/Equality/#4147" class="Bound">A</a><a id="4184" class="Symbol">}</a> <a id="4186" class="Symbol">{</a><a id="4187" href="/Equality/#4187" class="Bound">v</a> <a id="4189" href="/Equality/#4189" class="Bound">y</a> <a id="4191" class="Symbol">:</a> <a id="4193" href="/Equality/#4149" class="Bound">B</a><a id="4194" class="Symbol">}</a>
+  <a id="4198" class="Symbol">→</a> <a id="4200" href="/Equality/#4177" class="Bound">u</a> <a id="4202" href="/Equality/#683" class="Datatype Operator">≡</a> <a id="4204" href="/Equality/#4179" class="Bound">x</a> <a id="4206" class="Symbol">→</a> <a id="4208" href="/Equality/#4187" class="Bound">v</a> <a id="4210" href="/Equality/#683" class="Datatype Operator">≡</a> <a id="4212" href="/Equality/#4189" class="Bound">y</a> <a id="4214" class="Symbol">→</a> <a id="4216" href="/Equality/#4161" class="Bound">f</a> <a id="4218" href="/Equality/#4177" class="Bound">u</a> <a id="4220" href="/Equality/#4187" class="Bound">v</a> <a id="4222" href="/Equality/#683" class="Datatype Operator">≡</a> <a id="4224" href="/Equality/#4161" class="Bound">f</a> <a id="4226" href="/Equality/#4179" class="Bound">x</a> <a id="4228" href="/Equality/#4189" class="Bound">y</a>
+<a id="4230" href="/Equality/#4136" class="Function">cong₂</a> <a id="4236" href="/Equality/#4236" class="Bound">f</a> <a id="4238" href="/Equality/#723" class="InductiveConstructor">refl</a> <a id="4243" href="/Equality/#723" class="InductiveConstructor">refl</a> <a id="4248" class="Symbol">=</a> <a id="4250" href="/Equality/#723" class="InductiveConstructor">refl</a></pre>
+
+<p>Equality is also a congruence in the application position.
+If two functions are equal, then applying them to the same term
+yields equal terms.</p>
+<pre class="Agda"><a id="cong-app"></a><a id="4423" href="/Equality/#4423" class="Function">cong-app</a> <a id="4432" class="Symbol">:</a> <a id="4434" class="Symbol">∀</a> <a id="4436" class="Symbol">{</a><a id="4437" href="/Equality/#4437" class="Bound">A</a> <a id="4439" href="/Equality/#4439" class="Bound">B</a> <a id="4441" class="Symbol">:</a> <a id="4443" class="PrimitiveType">Set</a><a id="4446" class="Symbol">}</a> <a id="4448" class="Symbol">{</a><a id="4449" href="/Equality/#4449" class="Bound">f</a> <a id="4451" href="/Equality/#4451" class="Bound">g</a> <a id="4453" class="Symbol">:</a> <a id="4455" href="/Equality/#4437" class="Bound">A</a> <a id="4457" class="Symbol">→</a> <a id="4459" href="/Equality/#4439" class="Bound">B</a><a id="4460" class="Symbol">}</a> <a id="4462" class="Symbol">→</a> <a id="4464" href="/Equality/#4449" class="Bound">f</a> <a id="4466" href="/Equality/#683" class="Datatype Operator">≡</a> <a id="4468" href="/Equality/#4451" class="Bound">g</a> <a id="4470" class="Symbol">→</a> <a id="4472" class="Symbol">∀</a> <a id="4474" class="Symbol">(</a><a id="4475" href="/Equality/#4475" class="Bound">x</a> <a id="4477" class="Symbol">:</a> <a id="4479" href="/Equality/#4437" class="Bound">A</a><a id="4480" class="Symbol">)</a> <a id="4482" class="Symbol">→</a> <a id="4484" href="/Equality/#4449" class="Bound">f</a> <a id="4486" href="/Equality/#4475" class="Bound">x</a> <a id="4488" href="/Equality/#683" class="Datatype Operator">≡</a> <a id="4490" href="/Equality/#4451" class="Bound">g</a> <a id="4492" href="/Equality/#4475" class="Bound">x</a>
+<a id="4494" href="/Equality/#4423" class="Function">cong-app</a> <a id="4503" href="/Equality/#723" class="InductiveConstructor">refl</a> <a id="4508" href="/Equality/#4508" class="Bound">x</a> <a id="4510" class="Symbol">=</a> <a id="4512" href="/Equality/#723" class="InductiveConstructor">refl</a></pre>
+
+<p>Equality also satisfies <em>substitution</em>.
+If two values are equal and a predicate holds of the first then it also holds of the second.</p>
+<pre class="Agda"><a id="subst"></a><a id="4675" href="/Equality/#4675" class="Function">subst</a> <a id="4681" class="Symbol">:</a> <a id="4683" class="Symbol">∀</a> <a id="4685" class="Symbol">{</a><a id="4686" href="/Equality/#4686" class="Bound">A</a> <a id="4688" class="Symbol">:</a> <a id="4690" class="PrimitiveType">Set</a><a id="4693" class="Symbol">}</a> <a id="4695" class="Symbol">{</a><a id="4696" href="/Equality/#4696" class="Bound">x</a> <a id="4698" href="/Equality/#4698" class="Bound">y</a> <a id="4700" class="Symbol">:</a> <a id="4702" href="/Equality/#4686" class="Bound">A</a><a id="4703" class="Symbol">}</a> <a id="4705" class="Symbol">(</a><a id="4706" href="/Equality/#4706" class="Bound">P</a> <a id="4708" class="Symbol">:</a> <a id="4710" href="/Equality/#4686" class="Bound">A</a> <a id="4712" class="Symbol">→</a> <a id="4714" class="PrimitiveType">Set</a><a id="4717" class="Symbol">)</a> <a id="4719" class="Symbol">→</a> <a id="4721" href="/Equality/#4696" class="Bound">x</a> <a id="4723" href="/Equality/#683" class="Datatype Operator">≡</a> <a id="4725" href="/Equality/#4698" class="Bound">y</a> <a id="4727" class="Symbol">→</a> <a id="4729" href="/Equality/#4706" class="Bound">P</a> <a id="4731" href="/Equality/#4696" class="Bound">x</a> <a id="4733" class="Symbol">→</a> <a id="4735" href="/Equality/#4706" class="Bound">P</a> <a id="4737" href="/Equality/#4698" class="Bound">y</a>
+<a id="4739" href="/Equality/#4675" class="Function">subst</a> <a id="4745" href="/Equality/#4745" class="Bound">P</a> <a id="4747" href="/Equality/#723" class="InductiveConstructor">refl</a> <a id="4752" href="/Equality/#4752" class="Bound">px</a> <a id="4755" class="Symbol">=</a> <a id="4757" href="/Equality/#4752" class="Bound">px</a></pre>
+
+<h2 id="chains-of-equations">Chains of equations</h2>
+
+<p>Here we show how to support reasoning with chains of equations
+as used throughout the book.  We package the declarations
+into a module, named <code class="highlighter-rouge">≡-Reasoning</code>, to match the format used in Agda’s
+standard library.</p>
+<pre class="Agda"><a id="5020" class="Keyword">module</a> <a id="≡-Reasoning"></a><a id="5027" href="/Equality/#5027" class="Module">≡-Reasoning</a> <a id="5039" class="Symbol">{</a><a id="5040" href="/Equality/#5040" class="Bound">A</a> <a id="5042" class="Symbol">:</a> <a id="5044" class="PrimitiveType">Set</a><a id="5047" class="Symbol">}</a> <a id="5049" class="Keyword">where</a>
+
+  <a id="5058" class="Keyword">infix</a>  <a id="5065" class="Number">1</a> <a id="5067" href="/Equality/#5115" class="Function Operator">begin_</a>
+  <a id="5076" class="Keyword">infixr</a> <a id="5083" class="Number">2</a> <a id="5085" href="/Equality/#5173" class="Function Operator">_≡⟨⟩_</a> <a id="5091" href="/Equality/#5232" class="Function Operator">_≡⟨_⟩_</a>
+  <a id="5100" class="Keyword">infix</a>  <a id="5107" class="Number">3</a> <a id="5109" href="/Equality/#5322" class="Function Operator">_∎</a>
+
+  <a id="≡-Reasoning.begin_"></a><a id="5115" href="/Equality/#5115" class="Function Operator">begin_</a> <a id="5122" class="Symbol">:</a> <a id="5124" class="Symbol">∀</a> <a id="5126" class="Symbol">{</a><a id="5127" href="/Equality/#5127" class="Bound">x</a> <a id="5129" href="/Equality/#5129" class="Bound">y</a> <a id="5131" class="Symbol">:</a> <a id="5133" href="/Equality/#5040" class="Bound">A</a><a id="5134" class="Symbol">}</a> <a id="5136" class="Symbol">→</a> <a id="5138" href="/Equality/#5127" class="Bound">x</a> <a id="5140" href="/Equality/#683" class="Datatype Operator">≡</a> <a id="5142" href="/Equality/#5129" class="Bound">y</a> <a id="5144" class="Symbol">→</a> <a id="5146" href="/Equality/#5127" class="Bound">x</a> <a id="5148" href="/Equality/#683" class="Datatype Operator">≡</a> <a id="5150" href="/Equality/#5129" class="Bound">y</a>
+  <a id="5154" href="/Equality/#5115" class="Function Operator">begin</a> <a id="5160" href="/Equality/#5160" class="Bound">x≡y</a> <a id="5164" class="Symbol">=</a> <a id="5166" href="/Equality/#5160" class="Bound">x≡y</a>
+
+  <a id="≡-Reasoning._≡⟨⟩_"></a><a id="5173" href="/Equality/#5173" class="Function Operator">_≡⟨⟩_</a> <a id="5179" class="Symbol">:</a> <a id="5181" class="Symbol">∀</a> <a id="5183" class="Symbol">(</a><a id="5184" href="/Equality/#5184" class="Bound">x</a> <a id="5186" class="Symbol">{</a><a id="5187" href="/Equality/#5187" class="Bound">y</a><a id="5188" class="Symbol">}</a> <a id="5190" class="Symbol">:</a> <a id="5192" href="/Equality/#5040" class="Bound">A</a><a id="5193" class="Symbol">)</a> <a id="5195" class="Symbol">→</a> <a id="5197" href="/Equality/#5184" class="Bound">x</a> <a id="5199" href="/Equality/#683" class="Datatype Operator">≡</a> <a id="5201" href="/Equality/#5187" class="Bound">y</a> <a id="5203" class="Symbol">→</a> <a id="5205" href="/Equality/#5184" class="Bound">x</a> <a id="5207" href="/Equality/#683" class="Datatype Operator">≡</a> <a id="5209" href="/Equality/#5187" class="Bound">y</a>
+  <a id="5213" href="/Equality/#5213" class="Bound">x</a> <a id="5215" href="/Equality/#5173" class="Function Operator">≡⟨⟩</a> <a id="5219" href="/Equality/#5219" class="Bound">x≡y</a> <a id="5223" class="Symbol">=</a> <a id="5225" href="/Equality/#5219" class="Bound">x≡y</a>
+
+  <a id="≡-Reasoning._≡⟨_⟩_"></a><a id="5232" href="/Equality/#5232" class="Function Operator">_≡⟨_⟩_</a> <a id="5239" class="Symbol">:</a> <a id="5241" class="Symbol">∀</a> <a id="5243" class="Symbol">(</a><a id="5244" href="/Equality/#5244" class="Bound">x</a> <a id="5246" class="Symbol">:</a> <a id="5248" href="/Equality/#5040" class="Bound">A</a><a id="5249" class="Symbol">)</a> <a id="5251" class="Symbol">{</a><a id="5252" href="/Equality/#5252" class="Bound">y</a> <a id="5254" href="/Equality/#5254" class="Bound">z</a> <a id="5256" class="Symbol">:</a> <a id="5258" href="/Equality/#5040" class="Bound">A</a><a id="5259" class="Symbol">}</a> <a id="5261" class="Symbol">→</a> <a id="5263" href="/Equality/#5244" class="Bound">x</a> <a id="5265" href="/Equality/#683" class="Datatype Operator">≡</a> <a id="5267" href="/Equality/#5252" class="Bound">y</a> <a id="5269" class="Symbol">→</a> <a id="5271" href="/Equality/#5252" class="Bound">y</a> <a id="5273" href="/Equality/#683" class="Datatype Operator">≡</a> <a id="5275" href="/Equality/#5254" class="Bound">z</a> <a id="5277" class="Symbol">→</a> <a id="5279" href="/Equality/#5244" class="Bound">x</a> <a id="5281" href="/Equality/#683" class="Datatype Operator">≡</a> <a id="5283" href="/Equality/#5254" class="Bound">z</a>
+  <a id="5287" href="/Equality/#5287" class="Bound">x</a> <a id="5289" href="/Equality/#5232" class="Function Operator">≡⟨</a> <a id="5292" href="/Equality/#5292" class="Bound">x≡y</a> <a id="5296" href="/Equality/#5232" class="Function Operator">⟩</a> <a id="5298" href="/Equality/#5298" class="Bound">y≡z</a> <a id="5302" class="Symbol">=</a>  <a id="5305" href="/Equality/#3560" class="Function">trans</a> <a id="5311" href="/Equality/#5292" class="Bound">x≡y</a> <a id="5315" href="/Equality/#5298" class="Bound">y≡z</a>
+
+  <a id="≡-Reasoning._∎"></a><a id="5322" href="/Equality/#5322" class="Function Operator">_∎</a> <a id="5325" class="Symbol">:</a> <a id="5327" class="Symbol">∀</a> <a id="5329" class="Symbol">(</a><a id="5330" href="/Equality/#5330" class="Bound">x</a> <a id="5332" class="Symbol">:</a> <a id="5334" href="/Equality/#5040" class="Bound">A</a><a id="5335" class="Symbol">)</a> <a id="5337" class="Symbol">→</a> <a id="5339" href="/Equality/#5330" class="Bound">x</a> <a id="5341" href="/Equality/#683" class="Datatype Operator">≡</a> <a id="5343" href="/Equality/#5330" class="Bound">x</a>
+  <a id="5347" href="/Equality/#5347" class="Bound">x</a> <a id="5349" href="/Equality/#5322" class="Function Operator">∎</a> <a id="5351" class="Symbol">=</a> <a id="5353" href="/Equality/#723" class="InductiveConstructor">refl</a>
+
+<a id="5359" class="Keyword">open</a> <a id="5364" href="/Equality/#5027" class="Module">≡-Reasoning</a></pre>
+<p>Opening the module makes all of the definitions
+available in the current environment.</p>
+
+<p>As an example, let’s look at a proof of transitivity
+as a chain of equations.</p>
+<pre class="Agda"><a id="trans′"></a><a id="5565" href="/Equality/#5565" class="Function">trans′</a> <a id="5572" class="Symbol">:</a> <a id="5574" class="Symbol">∀</a> <a id="5576" class="Symbol">{</a><a id="5577" href="/Equality/#5577" class="Bound">A</a> <a id="5579" class="Symbol">:</a> <a id="5581" class="PrimitiveType">Set</a><a id="5584" class="Symbol">}</a> <a id="5586" class="Symbol">{</a><a id="5587" href="/Equality/#5587" class="Bound">x</a> <a id="5589" href="/Equality/#5589" class="Bound">y</a> <a id="5591" href="/Equality/#5591" class="Bound">z</a> <a id="5593" class="Symbol">:</a> <a id="5595" href="/Equality/#5577" class="Bound">A</a><a id="5596" class="Symbol">}</a> <a id="5598" class="Symbol">→</a> <a id="5600" href="/Equality/#5587" class="Bound">x</a> <a id="5602" href="/Equality/#683" class="Datatype Operator">≡</a> <a id="5604" href="/Equality/#5589" class="Bound">y</a> <a id="5606" class="Symbol">→</a> <a id="5608" href="/Equality/#5589" class="Bound">y</a> <a id="5610" href="/Equality/#683" class="Datatype Operator">≡</a> <a id="5612" href="/Equality/#5591" class="Bound">z</a> <a id="5614" class="Symbol">→</a> <a id="5616" href="/Equality/#5587" class="Bound">x</a> <a id="5618" href="/Equality/#683" class="Datatype Operator">≡</a> <a id="5620" href="/Equality/#5591" class="Bound">z</a>
+<a id="5622" href="/Equality/#5565" class="Function">trans′</a> <a id="5629" class="Symbol">{</a><a id="5630" href="/Equality/#5630" class="Bound">A</a><a id="5631" class="Symbol">}</a> <a id="5633" class="Symbol">{</a><a id="5634" href="/Equality/#5634" class="Bound">x</a><a id="5635" class="Symbol">}</a> <a id="5637" class="Symbol">{</a><a id="5638" href="/Equality/#5638" class="Bound">y</a><a id="5639" class="Symbol">}</a> <a id="5641" class="Symbol">{</a><a id="5642" href="/Equality/#5642" class="Bound">z</a><a id="5643" class="Symbol">}</a> <a id="5645" href="/Equality/#5645" class="Bound">x≡y</a> <a id="5649" href="/Equality/#5649" class="Bound">y≡z</a> <a id="5653" class="Symbol">=</a>
+  <a id="5657" href="/Equality/#5115" class="Function Operator">begin</a>
+    <a id="5667" href="/Equality/#5634" class="Bound">x</a>
+  <a id="5671" href="/Equality/#5232" class="Function Operator">≡⟨</a> <a id="5674" href="/Equality/#5645" class="Bound">x≡y</a> <a id="5678" href="/Equality/#5232" class="Function Operator">⟩</a>
+    <a id="5684" href="/Equality/#5638" class="Bound">y</a>
+  <a id="5688" href="/Equality/#5232" class="Function Operator">≡⟨</a> <a id="5691" href="/Equality/#5649" class="Bound">y≡z</a> <a id="5695" href="/Equality/#5232" class="Function Operator">⟩</a>
+    <a id="5701" href="/Equality/#5642" class="Bound">z</a>
+  <a id="5705" href="/Equality/#5322" class="Function Operator">∎</a></pre>
+<p>According to the fixity declarations, the body parses as follows:</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>begin (x ≡⟨ x≡y ⟩ (y ≡⟨ y≡z ⟩ (z ∎)))
+</code></pre></div></div>
+
+<p>The application of <code class="highlighter-rouge">begin</code> is purely cosmetic, as it simply returns
+its argument.  That argument consists of <code class="highlighter-rouge">_≡⟨_⟩_</code> applied to <code class="highlighter-rouge">x</code>,
+<code class="highlighter-rouge">x≡y</code>, and <code class="highlighter-rouge">y ≡⟨ y≡z ⟩ (z ∎)</code>.  The first argument is a term, <code class="highlighter-rouge">x</code>,
+while the second and third arguments are both proofs of equations, in
+particular proofs of <code class="highlighter-rouge">x ≡ y</code> and <code class="highlighter-rouge">y ≡ z</code> respectively, which are
+combined by <code class="highlighter-rouge">trans</code> in the body of <code class="highlighter-rouge">_≡⟨_⟩_</code> to yield a proof of <code class="highlighter-rouge">x ≡
+z</code>.  The proof of <code class="highlighter-rouge">y ≡ z</code> consists of <code class="highlighter-rouge">_≡⟨_⟩_</code> applied to <code class="highlighter-rouge">y</code>, <code class="highlighter-rouge">y≡z</code>,
+and <code class="highlighter-rouge">z ∎</code>.  The first argument is a term, <code class="highlighter-rouge">y</code>, while the second and
+third arguments are both proofs of equations, in particular proofs of
+<code class="highlighter-rouge">y ≡ z</code> and <code class="highlighter-rouge">z ≡ z</code> respectively, which are combined by <code class="highlighter-rouge">trans</code> in the
+body of <code class="highlighter-rouge">_≡⟨_⟩_</code> to yield a proof of <code class="highlighter-rouge">y ≡ z</code>.  Finally, the proof of
+<code class="highlighter-rouge">z ≡ z</code> consists of <code class="highlighter-rouge">_∎</code> applied to the term <code class="highlighter-rouge">z</code>, which yields <code class="highlighter-rouge">refl</code>.
+After simplification, the body is equivalent to the term:</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>trans x≡y (trans y≡z refl)
+</code></pre></div></div>
+
+<p>We could replace any use of a chain of equations by a chain of
+applications of <code class="highlighter-rouge">trans</code>; the result would be more compact but harder
+to read.  The trick behind <code class="highlighter-rouge">∎</code> means that a chain of equalities simplifies
+to a chain of applications of <code class="highlighter-rouge">trans</code> than ends in <code class="highlighter-rouge">trans e refl</code>,
+where <code class="highlighter-rouge">e</code> is a term that proves some equality, even though <code class="highlighter-rouge">e</code> alone would do.</p>
+
+<h2 id="chains-of-equations-another-example">Chains of equations, another example</h2>
+
+<p>As a second example of chains of equations, we repeat the proof that addition
+is commutative.  We first repeat the definitions of naturals and addition.
+We cannot import them because (as noted at the beginning of this chapter)
+it would cause a conflict.</p>
+<pre class="Agda"><a id="7406" class="Keyword">data</a> <a id="ℕ"></a><a id="7411" href="/Equality/#7411" class="Datatype">ℕ</a> <a id="7413" class="Symbol">:</a> <a id="7415" class="PrimitiveType">Set</a> <a id="7419" class="Keyword">where</a>
+  <a id="ℕ.zero"></a><a id="7427" href="/Equality/#7427" class="InductiveConstructor">zero</a> <a id="7432" class="Symbol">:</a> <a id="7434" href="/Equality/#7411" class="Datatype">ℕ</a>
+  <a id="ℕ.suc"></a><a id="7438" href="/Equality/#7438" class="InductiveConstructor">suc</a>  <a id="7443" class="Symbol">:</a> <a id="7445" href="/Equality/#7411" class="Datatype">ℕ</a> <a id="7447" class="Symbol">→</a> <a id="7449" href="/Equality/#7411" class="Datatype">ℕ</a>
+
+<a id="_+_"></a><a id="7452" href="/Equality/#7452" class="Function Operator">_+_</a> <a id="7456" class="Symbol">:</a> <a id="7458" href="/Equality/#7411" class="Datatype">ℕ</a> <a id="7460" class="Symbol">→</a> <a id="7462" href="/Equality/#7411" class="Datatype">ℕ</a> <a id="7464" class="Symbol">→</a> <a id="7466" href="/Equality/#7411" class="Datatype">ℕ</a>
+<a id="7468" href="/Equality/#7427" class="InductiveConstructor">zero</a>    <a id="7476" href="/Equality/#7452" class="Function Operator">+</a> <a id="7478" href="/Equality/#7478" class="Bound">n</a>  <a id="7481" class="Symbol">=</a>  <a id="7484" href="/Equality/#7478" class="Bound">n</a>
+<a id="7486" class="Symbol">(</a><a id="7487" href="/Equality/#7438" class="InductiveConstructor">suc</a> <a id="7491" href="/Equality/#7491" class="Bound">m</a><a id="7492" class="Symbol">)</a> <a id="7494" href="/Equality/#7452" class="Function Operator">+</a> <a id="7496" href="/Equality/#7496" class="Bound">n</a>  <a id="7499" class="Symbol">=</a>  <a id="7502" href="/Equality/#7438" class="InductiveConstructor">suc</a> <a id="7506" class="Symbol">(</a><a id="7507" href="/Equality/#7491" class="Bound">m</a> <a id="7509" href="/Equality/#7452" class="Function Operator">+</a> <a id="7511" href="/Equality/#7496" class="Bound">n</a><a id="7512" class="Symbol">)</a></pre>
+
+<p>To save space we postulate (rather than prove in full) two lemmas.</p>
+<pre class="Agda"><a id="7606" class="Keyword">postulate</a>
+  <a id="+-identity"></a><a id="7618" href="/Equality/#7618" class="Postulate">+-identity</a> <a id="7629" class="Symbol">:</a> <a id="7631" class="Symbol">∀</a> <a id="7633" class="Symbol">(</a><a id="7634" href="/Equality/#7634" class="Bound">m</a> <a id="7636" class="Symbol">:</a> <a id="7638" href="/Equality/#7411" class="Datatype">ℕ</a><a id="7639" class="Symbol">)</a> <a id="7641" class="Symbol">→</a> <a id="7643" href="/Equality/#7634" class="Bound">m</a> <a id="7645" href="/Equality/#7452" class="Function Operator">+</a> <a id="7647" href="/Equality/#7427" class="InductiveConstructor">zero</a> <a id="7652" href="/Equality/#683" class="Datatype Operator">≡</a> <a id="7654" href="/Equality/#7634" class="Bound">m</a>
+  <a id="+-suc"></a><a id="7658" href="/Equality/#7658" class="Postulate">+-suc</a> <a id="7664" class="Symbol">:</a> <a id="7666" class="Symbol">∀</a> <a id="7668" class="Symbol">(</a><a id="7669" href="/Equality/#7669" class="Bound">m</a> <a id="7671" href="/Equality/#7671" class="Bound">n</a> <a id="7673" class="Symbol">:</a> <a id="7675" href="/Equality/#7411" class="Datatype">ℕ</a><a id="7676" class="Symbol">)</a> <a id="7678" class="Symbol">→</a> <a id="7680" href="/Equality/#7669" class="Bound">m</a> <a id="7682" href="/Equality/#7452" class="Function Operator">+</a> <a id="7684" href="/Equality/#7438" class="InductiveConstructor">suc</a> <a id="7688" href="/Equality/#7671" class="Bound">n</a> <a id="7690" href="/Equality/#683" class="Datatype Operator">≡</a> <a id="7692" href="/Equality/#7438" class="InductiveConstructor">suc</a> <a id="7696" class="Symbol">(</a><a id="7697" href="/Equality/#7669" class="Bound">m</a> <a id="7699" href="/Equality/#7452" class="Function Operator">+</a> <a id="7701" href="/Equality/#7671" class="Bound">n</a><a id="7702" class="Symbol">)</a></pre>
+<p>This is our first use of a <em>postulate</em>.  A postulate specifies a
+signature for an identifier but no definition.  Here we postulate
+something proved earlier to save space.  Postulates must be used with
+caution.  If we postulate something false then we could use Agda to
+prove anything whatsoever.</p>
+
+<p>We then repeat the proof of commutativity.</p>
+<pre class="Agda"><a id="+-comm"></a><a id="8068" href="/Equality/#8068" class="Function">+-comm</a> <a id="8075" class="Symbol">:</a> <a id="8077" class="Symbol">∀</a> <a id="8079" class="Symbol">(</a><a id="8080" href="/Equality/#8080" class="Bound">m</a> <a id="8082" href="/Equality/#8082" class="Bound">n</a> <a id="8084" class="Symbol">:</a> <a id="8086" href="/Equality/#7411" class="Datatype">ℕ</a><a id="8087" class="Symbol">)</a> <a id="8089" class="Symbol">→</a> <a id="8091" href="/Equality/#8080" class="Bound">m</a> <a id="8093" href="/Equality/#7452" class="Function Operator">+</a> <a id="8095" href="/Equality/#8082" class="Bound">n</a> <a id="8097" href="/Equality/#683" class="Datatype Operator">≡</a> <a id="8099" href="/Equality/#8082" class="Bound">n</a> <a id="8101" href="/Equality/#7452" class="Function Operator">+</a> <a id="8103" href="/Equality/#8080" class="Bound">m</a>
+<a id="8105" href="/Equality/#8068" class="Function">+-comm</a> <a id="8112" href="/Equality/#8112" class="Bound">m</a> <a id="8114" href="/Equality/#7427" class="InductiveConstructor">zero</a> <a id="8119" class="Symbol">=</a>
+  <a id="8123" href="/Equality/#5115" class="Function Operator">begin</a>
+    <a id="8133" href="/Equality/#8112" class="Bound">m</a> <a id="8135" href="/Equality/#7452" class="Function Operator">+</a> <a id="8137" href="/Equality/#7427" class="InductiveConstructor">zero</a>
+  <a id="8144" href="/Equality/#5232" class="Function Operator">≡⟨</a> <a id="8147" href="/Equality/#7618" class="Postulate">+-identity</a> <a id="8158" href="/Equality/#8112" class="Bound">m</a> <a id="8160" href="/Equality/#5232" class="Function Operator">⟩</a>
+    <a id="8166" href="/Equality/#8112" class="Bound">m</a>
+  <a id="8170" href="/Equality/#5173" class="Function Operator">≡⟨⟩</a>
+    <a id="8178" href="/Equality/#7427" class="InductiveConstructor">zero</a> <a id="8183" href="/Equality/#7452" class="Function Operator">+</a> <a id="8185" href="/Equality/#8112" class="Bound">m</a>
+  <a id="8189" href="/Equality/#5322" class="Function Operator">∎</a>
+<a id="8191" href="/Equality/#8068" class="Function">+-comm</a> <a id="8198" href="/Equality/#8198" class="Bound">m</a> <a id="8200" class="Symbol">(</a><a id="8201" href="/Equality/#7438" class="InductiveConstructor">suc</a> <a id="8205" href="/Equality/#8205" class="Bound">n</a><a id="8206" class="Symbol">)</a> <a id="8208" class="Symbol">=</a>
+  <a id="8212" href="/Equality/#5115" class="Function Operator">begin</a>
+    <a id="8222" href="/Equality/#8198" class="Bound">m</a> <a id="8224" href="/Equality/#7452" class="Function Operator">+</a> <a id="8226" href="/Equality/#7438" class="InductiveConstructor">suc</a> <a id="8230" href="/Equality/#8205" class="Bound">n</a>
+  <a id="8234" href="/Equality/#5232" class="Function Operator">≡⟨</a> <a id="8237" href="/Equality/#7658" class="Postulate">+-suc</a> <a id="8243" href="/Equality/#8198" class="Bound">m</a> <a id="8245" href="/Equality/#8205" class="Bound">n</a> <a id="8247" href="/Equality/#5232" class="Function Operator">⟩</a>
+    <a id="8253" href="/Equality/#7438" class="InductiveConstructor">suc</a> <a id="8257" class="Symbol">(</a><a id="8258" href="/Equality/#8198" class="Bound">m</a> <a id="8260" href="/Equality/#7452" class="Function Operator">+</a> <a id="8262" href="/Equality/#8205" class="Bound">n</a><a id="8263" class="Symbol">)</a>
+  <a id="8267" href="/Equality/#5232" class="Function Operator">≡⟨</a> <a id="8270" href="/Equality/#3974" class="Function">cong</a> <a id="8275" href="/Equality/#7438" class="InductiveConstructor">suc</a> <a id="8279" class="Symbol">(</a><a id="8280" href="/Equality/#8068" class="Function">+-comm</a> <a id="8287" href="/Equality/#8198" class="Bound">m</a> <a id="8289" href="/Equality/#8205" class="Bound">n</a><a id="8290" class="Symbol">)</a> <a id="8292" href="/Equality/#5232" class="Function Operator">⟩</a>
+    <a id="8298" href="/Equality/#7438" class="InductiveConstructor">suc</a> <a id="8302" class="Symbol">(</a><a id="8303" href="/Equality/#8205" class="Bound">n</a> <a id="8305" href="/Equality/#7452" class="Function Operator">+</a> <a id="8307" href="/Equality/#8198" class="Bound">m</a><a id="8308" class="Symbol">)</a>
+  <a id="8312" href="/Equality/#5173" class="Function Operator">≡⟨⟩</a>
+    <a id="8320" href="/Equality/#7438" class="InductiveConstructor">suc</a> <a id="8324" href="/Equality/#8205" class="Bound">n</a> <a id="8326" href="/Equality/#7452" class="Function Operator">+</a> <a id="8328" href="/Equality/#8198" class="Bound">m</a>
+  <a id="8332" href="/Equality/#5322" class="Function Operator">∎</a></pre>
+<p>The reasoning here is similar to that in the
+preceding section, the one addition being the use of
+<code class="highlighter-rouge">_≡⟨⟩_</code>, which we use when no justification is required.
+One can think of occurrences of <code class="highlighter-rouge">≡⟨⟩</code> as an equivalent
+to <code class="highlighter-rouge">≡⟨ refl ⟩</code>.</p>
+
+<p>Agda always treats a term as equivalent to its
+simplified term.  The reason that one can write</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>  suc (n + m)
+≡⟨⟩
+  suc n + m
+</code></pre></div></div>
+
+<p>is because Agda treats both terms as the same.
+This also means that one could instead interchange
+the lines and write</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>  suc n + m
+≡⟨⟩
+  suc (n + m)
+</code></pre></div></div>
+
+<p>and Agda would not object. Agda only checks that the terms
+separated by <code class="highlighter-rouge">≡⟨⟩</code> have the same simplified form; it’s up to us to write
+them in an order that will make sense to the reader.</p>
+
+<h2 id="rewriting">Rewriting</h2>
+
+<p>Consider a property of natural numbers, such as being even.
+We repeat the earlier definition.</p>
+<pre class="Agda"><a id="9181" class="Keyword">data</a> <a id="even"></a><a id="9186" href="/Equality/#9186" class="Datatype">even</a> <a id="9191" class="Symbol">:</a> <a id="9193" href="/Equality/#7411" class="Datatype">ℕ</a> <a id="9195" class="Symbol">→</a> <a id="9197" class="PrimitiveType">Set</a>
+<a id="9201" class="Keyword">data</a> <a id="odd"></a><a id="9206" href="/Equality/#9206" class="Datatype">odd</a>  <a id="9211" class="Symbol">:</a> <a id="9213" href="/Equality/#7411" class="Datatype">ℕ</a> <a id="9215" class="Symbol">→</a> <a id="9217" class="PrimitiveType">Set</a>
+
+<a id="9222" class="Keyword">data</a> <a id="9227" href="/Equality/#9186" class="Datatype">even</a> <a id="9232" class="Keyword">where</a>
+  <a id="even.even-zero"></a><a id="9240" href="/Equality/#9240" class="InductiveConstructor">even-zero</a> <a id="9250" class="Symbol">:</a> <a id="9252" href="/Equality/#9186" class="Datatype">even</a> <a id="9257" href="/Equality/#7427" class="InductiveConstructor">zero</a>
+  <a id="even.even-suc"></a><a id="9264" href="/Equality/#9264" class="InductiveConstructor">even-suc</a>  <a id="9274" class="Symbol">:</a> <a id="9276" class="Symbol">∀</a> <a id="9278" class="Symbol">{</a><a id="9279" href="/Equality/#9279" class="Bound">n</a> <a id="9281" class="Symbol">:</a> <a id="9283" href="/Equality/#7411" class="Datatype">ℕ</a><a id="9284" class="Symbol">}</a> <a id="9286" class="Symbol">→</a> <a id="9288" href="/Equality/#9206" class="Datatype">odd</a> <a id="9292" href="/Equality/#9279" class="Bound">n</a> <a id="9294" class="Symbol">→</a> <a id="9296" href="/Equality/#9186" class="Datatype">even</a> <a id="9301" class="Symbol">(</a><a id="9302" href="/Equality/#7438" class="InductiveConstructor">suc</a> <a id="9306" href="/Equality/#9279" class="Bound">n</a><a id="9307" class="Symbol">)</a>
+
+<a id="9310" class="Keyword">data</a> <a id="9315" href="/Equality/#9206" class="Datatype">odd</a> <a id="9319" class="Keyword">where</a>
+  <a id="odd.odd-suc"></a><a id="9327" href="/Equality/#9327" class="InductiveConstructor">odd-suc</a>   <a id="9337" class="Symbol">:</a> <a id="9339" class="Symbol">∀</a> <a id="9341" class="Symbol">{</a><a id="9342" href="/Equality/#9342" class="Bound">n</a> <a id="9344" class="Symbol">:</a> <a id="9346" href="/Equality/#7411" class="Datatype">ℕ</a><a id="9347" class="Symbol">}</a> <a id="9349" class="Symbol">→</a> <a id="9351" href="/Equality/#9186" class="Datatype">even</a> <a id="9356" href="/Equality/#9342" class="Bound">n</a> <a id="9358" class="Symbol">→</a> <a id="9360" href="/Equality/#9206" class="Datatype">odd</a> <a id="9364" class="Symbol">(</a><a id="9365" href="/Equality/#7438" class="InductiveConstructor">suc</a> <a id="9369" href="/Equality/#9342" class="Bound">n</a><a id="9370" class="Symbol">)</a></pre>
+<p>In the previous section, we proved addition is commutative.
+Given evidence that <code class="highlighter-rouge">even (m + n)</code> holds,
+we ought also to be able to take that as evidence
+that <code class="highlighter-rouge">even (n + m)</code> holds.</p>
+
+<p>Agda includes special notation to support just this
+kind of reasoning.  To enable this notation, we use
+pragmas to tell Agda which type
+corresponds to equivalence.</p>
+<pre class="Agda"><a id="9740" class="Symbol">{-#</a> <a id="9744" class="Keyword">BUILTIN</a> EQUALITY <a id="9761" href="/Equality/#683" class="Datatype Operator">_≡_</a> <a id="9765" class="Symbol">#-}</a></pre>
+
+<p>We can then prove the desired property as follows.</p>
+<pre class="Agda"><a id="even-comm"></a><a id="9845" href="/Equality/#9845" class="Function">even-comm</a> <a id="9855" class="Symbol">:</a> <a id="9857" class="Symbol">∀</a> <a id="9859" class="Symbol">(</a><a id="9860" href="/Equality/#9860" class="Bound">m</a> <a id="9862" href="/Equality/#9862" class="Bound">n</a> <a id="9864" class="Symbol">:</a> <a id="9866" href="/Equality/#7411" class="Datatype">ℕ</a><a id="9867" class="Symbol">)</a> <a id="9869" class="Symbol">→</a> <a id="9871" href="/Equality/#9186" class="Datatype">even</a> <a id="9876" class="Symbol">(</a><a id="9877" href="/Equality/#9860" class="Bound">m</a> <a id="9879" href="/Equality/#7452" class="Function Operator">+</a> <a id="9881" href="/Equality/#9862" class="Bound">n</a><a id="9882" class="Symbol">)</a> <a id="9884" class="Symbol">→</a> <a id="9886" href="/Equality/#9186" class="Datatype">even</a> <a id="9891" class="Symbol">(</a><a id="9892" href="/Equality/#9862" class="Bound">n</a> <a id="9894" href="/Equality/#7452" class="Function Operator">+</a> <a id="9896" href="/Equality/#9860" class="Bound">m</a><a id="9897" class="Symbol">)</a>
+<a id="9899" href="/Equality/#9845" class="Function">even-comm</a> <a id="9909" href="/Equality/#9909" class="Bound">m</a> <a id="9911" href="/Equality/#9911" class="Bound">n</a> <a id="9913" href="/Equality/#9913" class="Bound">ev</a> <a id="9916" class="Keyword">rewrite</a> <a id="9924" href="/Equality/#8068" class="Function">+-comm</a> <a id="9931" href="/Equality/#9909" class="Bound">m</a> <a id="9933" href="/Equality/#9911" class="Bound">n</a> <a id="9935" class="Symbol">=</a> <a id="9937" href="/Equality/#9913" class="Bound">ev</a></pre>
+<p>Here <code class="highlighter-rouge">ev</code> ranges over evidence that <code class="highlighter-rouge">even (m + n)</code> holds, and we show
+that it is also provides evidence that <code class="highlighter-rouge">even (n + m)</code> holds.  In
+general, the keyword <code class="highlighter-rouge">rewrite</code> is followed by evidence of an
+equivalence, and that equivalence is used to rewrite the type of the
+goal and of any variable in scope.</p>
+
+<p>It is instructive to develop <code class="highlighter-rouge">even-comm</code> interactively.
+To start, we supply variables for the arguments on the left, and a hole for the body on the right:</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>even-comm : ∀ (m n : ℕ) → even (m + n) → even (n + m)
+even-comm m n ev = {! !}
+</code></pre></div></div>
+
+<p>If we go into the hole and type <code class="highlighter-rouge">C-c C-,</code> then Agda reports:</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>Goal: even (n + m)
+————————————————————————————————————————————————————————————
+ev : even (m + n)
+n  : ℕ
+m  : ℕ
+</code></pre></div></div>
+
+<p>Now we add the rewrite.</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>even-comm : ∀ (m n : ℕ) → even (m + n) → even (n + m)
+even-comm m n ev rewrite +-comm m n = {! !}
+</code></pre></div></div>
+
+<p>If we go into the hole again and type <code class="highlighter-rouge">C-c C-,</code> then Agda now reports:</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>Goal: even (n + m)
+————————————————————————————————————————————————————————————
+ev : even (n + m)
+n  : ℕ
+m  : ℕ
+</code></pre></div></div>
+
+<p>Now it is trivial to see that <code class="highlighter-rouge">ev</code> satisfies the goal, and typing <code class="highlighter-rouge">C-c C-a</code> in the
+hole causes it to be filled with <code class="highlighter-rouge">ev</code>.</p>
+
+<h2 id="multiple-rewrites">Multiple rewrites</h2>
+
+<p>One may perform multiple rewrites, each separated by a vertical bar.  For instance,
+here is a second proof that addition is commutative, relying on rewrites rather
+than chains of equalities.</p>
+<pre class="Agda"><a id="+-comm′"></a><a id="11378" href="/Equality/#11378" class="Function">+-comm′</a> <a id="11386" class="Symbol">:</a> <a id="11388" class="Symbol">∀</a> <a id="11390" class="Symbol">(</a><a id="11391" href="/Equality/#11391" class="Bound">m</a> <a id="11393" href="/Equality/#11393" class="Bound">n</a> <a id="11395" class="Symbol">:</a> <a id="11397" href="/Equality/#7411" class="Datatype">ℕ</a><a id="11398" class="Symbol">)</a> <a id="11400" class="Symbol">→</a> <a id="11402" href="/Equality/#11391" class="Bound">m</a> <a id="11404" href="/Equality/#7452" class="Function Operator">+</a> <a id="11406" href="/Equality/#11393" class="Bound">n</a> <a id="11408" href="/Equality/#683" class="Datatype Operator">≡</a> <a id="11410" href="/Equality/#11393" class="Bound">n</a> <a id="11412" href="/Equality/#7452" class="Function Operator">+</a> <a id="11414" href="/Equality/#11391" class="Bound">m</a>
+<a id="11416" href="/Equality/#11378" class="Function">+-comm′</a> <a id="11424" href="/Equality/#7427" class="InductiveConstructor">zero</a> <a id="11429" href="/Equality/#11429" class="Bound">n</a> <a id="11431" class="Keyword">rewrite</a> <a id="11439" href="/Equality/#7618" class="Postulate">+-identity</a> <a id="11450" href="/Equality/#11429" class="Bound">n</a> <a id="11452" class="Symbol">=</a> <a id="11454" href="/Equality/#723" class="InductiveConstructor">refl</a>
+<a id="11459" href="/Equality/#11378" class="Function">+-comm′</a> <a id="11467" class="Symbol">(</a><a id="11468" href="/Equality/#7438" class="InductiveConstructor">suc</a> <a id="11472" href="/Equality/#11472" class="Bound">m</a><a id="11473" class="Symbol">)</a> <a id="11475" href="/Equality/#11475" class="Bound">n</a> <a id="11477" class="Keyword">rewrite</a> <a id="11485" href="/Equality/#7658" class="Postulate">+-suc</a> <a id="11491" href="/Equality/#11475" class="Bound">n</a> <a id="11493" href="/Equality/#11472" class="Bound">m</a> <a id="11495" class="Symbol">|</a> <a id="11497" href="/Equality/#8068" class="Function">+-comm</a> <a id="11504" href="/Equality/#11472" class="Bound">m</a> <a id="11506" href="/Equality/#11475" class="Bound">n</a> <a id="11508" class="Symbol">=</a> <a id="11510" href="/Equality/#723" class="InductiveConstructor">refl</a></pre>
+<p>This is far more compact.  Among other things, whereas the previous
+proof required <code class="highlighter-rouge">cong suc (+-comm m n)</code> as the justification to invoke the
+inductive hypothesis, here it is sufficient to rewrite with <code class="highlighter-rouge">+-comm m n</code>, as
+rewriting automatically takes congruence into account.  Although proofs
+with rewriting are shorter, proofs as chains of equalities are easier to follow,
+and we will stick with the latter when feasible.</p>
+
+<h2 id="rewriting-expanded">Rewriting expanded</h2>
+
+<p>The <code class="highlighter-rouge">rewrite</code> notation is in fact shorthand for an appropriate use of <code class="highlighter-rouge">with</code>
+abstraction.</p>
+<pre class="Agda"><a id="even-comm′"></a><a id="12075" href="/Equality/#12075" class="Function">even-comm′</a> <a id="12086" class="Symbol">:</a> <a id="12088" class="Symbol">∀</a> <a id="12090" class="Symbol">(</a><a id="12091" href="/Equality/#12091" class="Bound">m</a> <a id="12093" href="/Equality/#12093" class="Bound">n</a> <a id="12095" class="Symbol">:</a> <a id="12097" href="/Equality/#7411" class="Datatype">ℕ</a><a id="12098" class="Symbol">)</a> <a id="12100" class="Symbol">→</a> <a id="12102" href="/Equality/#9186" class="Datatype">even</a> <a id="12107" class="Symbol">(</a><a id="12108" href="/Equality/#12091" class="Bound">m</a> <a id="12110" href="/Equality/#7452" class="Function Operator">+</a> <a id="12112" href="/Equality/#12093" class="Bound">n</a><a id="12113" class="Symbol">)</a> <a id="12115" class="Symbol">→</a> <a id="12117" href="/Equality/#9186" class="Datatype">even</a> <a id="12122" class="Symbol">(</a><a id="12123" href="/Equality/#12093" class="Bound">n</a> <a id="12125" href="/Equality/#7452" class="Function Operator">+</a> <a id="12127" href="/Equality/#12091" class="Bound">m</a><a id="12128" class="Symbol">)</a>
+<a id="12130" href="/Equality/#12075" class="Function">even-comm′</a> <a id="12141" href="/Equality/#12141" class="Bound">m</a> <a id="12143" href="/Equality/#12143" class="Bound">n</a> <a id="12145" href="/Equality/#12145" class="Bound">ev</a> <a id="12148" class="Keyword">with</a>   <a id="12155" href="/Equality/#12141" class="Bound">m</a> <a id="12157" href="/Equality/#7452" class="Function Operator">+</a> <a id="12159" href="/Equality/#12143" class="Bound">n</a>  <a id="12162" class="Symbol">|</a> <a id="12164" href="/Equality/#8068" class="Function">+-comm</a> <a id="12171" href="/Equality/#12141" class="Bound">m</a> <a id="12173" href="/Equality/#12143" class="Bound">n</a>
+<a id="12175" class="Symbol">...</a>                  <a id="12196" class="Symbol">|</a> <a id="12198" class="DottedPattern Symbol">.(</a><a id="12200" class="DottedPattern Bound">n</a> <a id="12202" href="/Equality/#7452" class="DottedPattern Function Operator">+</a> <a id="12204" class="DottedPattern Bound">m</a><a id="12205" class="DottedPattern Symbol">)</a> <a id="12207" class="Symbol">|</a> <a id="12209" href="/Equality/#723" class="InductiveConstructor">refl</a>        <a id="12221" class="Symbol">=</a> <a id="12223" class="Bound">ev</a></pre>
+<p>The first clause asserts that <code class="highlighter-rouge">m + n</code> and <code class="highlighter-rouge">n + m</code> are identical, and
+the second clause justifies that assertion with evidence of the
+appropriate equivalence.  Note the use of the “dot pattern”, <code class="highlighter-rouge">.(n + m)</code>.
+A dot pattern is followed by an expression and is made when
+other information forces the value matched to be equal to the value of
+the expression in the dot pattern.  In this case, the identification
+of <code class="highlighter-rouge">m + n</code> and <code class="highlighter-rouge">n + m</code> is justified by the subsequent matching of
+<code class="highlighter-rouge">+-comm m n</code> against <code class="highlighter-rouge">refl</code>.  One might think that the first clause is
+redundant as the information is inherent in the second clause, but in
+fact Agda is rather picky on this point: omitting the first clause or
+reversing the order of the clauses will cause Agda to report an error.
+(Try it and see!)</p>
+
+<p>In this case, we can avoid rewrite by simply applying substitution.</p>
+<pre class="Agda"><a id="even-comm″"></a><a id="13091" href="/Equality/#13091" class="Function">even-comm″</a> <a id="13102" class="Symbol">:</a> <a id="13104" class="Symbol">∀</a> <a id="13106" class="Symbol">(</a><a id="13107" href="/Equality/#13107" class="Bound">m</a> <a id="13109" href="/Equality/#13109" class="Bound">n</a> <a id="13111" class="Symbol">:</a> <a id="13113" href="/Equality/#7411" class="Datatype">ℕ</a><a id="13114" class="Symbol">)</a> <a id="13116" class="Symbol">→</a> <a id="13118" href="/Equality/#9186" class="Datatype">even</a> <a id="13123" class="Symbol">(</a><a id="13124" href="/Equality/#13107" class="Bound">m</a> <a id="13126" href="/Equality/#7452" class="Function Operator">+</a> <a id="13128" href="/Equality/#13109" class="Bound">n</a><a id="13129" class="Symbol">)</a> <a id="13131" class="Symbol">→</a> <a id="13133" href="/Equality/#9186" class="Datatype">even</a> <a id="13138" class="Symbol">(</a><a id="13139" href="/Equality/#13109" class="Bound">n</a> <a id="13141" href="/Equality/#7452" class="Function Operator">+</a> <a id="13143" href="/Equality/#13107" class="Bound">m</a><a id="13144" class="Symbol">)</a>
+<a id="13146" href="/Equality/#13091" class="Function">even-comm″</a> <a id="13157" href="/Equality/#13157" class="Bound">m</a> <a id="13159" href="/Equality/#13159" class="Bound">n</a>  <a id="13162" class="Symbol">=</a>  <a id="13165" href="/Equality/#4675" class="Function">subst</a> <a id="13171" href="/Equality/#9186" class="Datatype">even</a> <a id="13176" class="Symbol">(</a><a id="13177" href="/Equality/#8068" class="Function">+-comm</a> <a id="13184" href="/Equality/#13157" class="Bound">m</a> <a id="13186" href="/Equality/#13159" class="Bound">n</a><a id="13187" class="Symbol">)</a></pre>
+<p>Nonetheless, rewrite is a vital part of the Agda toolkit,
+as earlier examples have shown.</p>
+
+<h2 id="leibniz-equality">Leibniz equality</h2>
+
+<p>The form of asserting equivalence that we have used is due to Martin Löf,
+and was published in 1975.  An older form is due to Leibniz, and was published
+in 1686.  Leibniz asserted the <em>identity of indiscernibles</em>: two objects are
+equal if and only if they satisfy the same properties. This
+principle sometimes goes by the name Leibniz’ Law, and is closely
+related to Spock’s Law, ``A difference that makes no difference is no
+difference’’.  Here we define Leibniz equality, and show that two terms
+satisfy Leibniz equality if and only if they satisfy Martin Löf equivalence.</p>
+
+<p>Leibniz equality is usually formalised to state that <code class="highlighter-rouge">x ≐ y</code>
+holds if every property <code class="highlighter-rouge">P</code> that holds of <code class="highlighter-rouge">x</code> also holds of
+<code class="highlighter-rouge">y</code>.  Perhaps surprisingly, this definition is
+sufficient to also ensure the converse, that every property <code class="highlighter-rouge">P</code> that
+holds of <code class="highlighter-rouge">y</code> also holds of <code class="highlighter-rouge">x</code>.</p>
+
+<p>Let <code class="highlighter-rouge">x</code> and <code class="highlighter-rouge">y</code> be objects of type <code class="highlighter-rouge">A</code>. We say that <code class="highlighter-rouge">x ≐ y</code> holds if
+for every predicate <code class="highlighter-rouge">P</code> over type <code class="highlighter-rouge">A</code> we have that <code class="highlighter-rouge">P x</code> implies <code class="highlighter-rouge">P y</code>.</p>
+<pre class="Agda"><a id="_≐_"></a><a id="14313" href="/Equality/#14313" class="Function Operator">_≐_</a> <a id="14317" class="Symbol">:</a> <a id="14319" class="Symbol">∀</a> <a id="14321" class="Symbol">{</a><a id="14322" href="/Equality/#14322" class="Bound">A</a> <a id="14324" class="Symbol">:</a> <a id="14326" class="PrimitiveType">Set</a><a id="14329" class="Symbol">}</a> <a id="14331" class="Symbol">(</a><a id="14332" href="/Equality/#14332" class="Bound">x</a> <a id="14334" href="/Equality/#14334" class="Bound">y</a> <a id="14336" class="Symbol">:</a> <a id="14338" href="/Equality/#14322" class="Bound">A</a><a id="14339" class="Symbol">)</a> <a id="14341" class="Symbol">→</a> <a id="14343" class="PrimitiveType">Set₁</a>
+<a id="14348" href="/Equality/#14313" class="Function Operator">_≐_</a> <a id="14352" class="Symbol">{</a><a id="14353" href="/Equality/#14353" class="Bound">A</a><a id="14354" class="Symbol">}</a> <a id="14356" href="/Equality/#14356" class="Bound">x</a> <a id="14358" href="/Equality/#14358" class="Bound">y</a> <a id="14360" class="Symbol">=</a> <a id="14362" class="Symbol">∀</a> <a id="14364" class="Symbol">(</a><a id="14365" href="/Equality/#14365" class="Bound">P</a> <a id="14367" class="Symbol">:</a> <a id="14369" href="/Equality/#14353" class="Bound">A</a> <a id="14371" class="Symbol">→</a> <a id="14373" class="PrimitiveType">Set</a><a id="14376" class="Symbol">)</a> <a id="14378" class="Symbol">→</a> <a id="14380" href="/Equality/#14365" class="Bound">P</a> <a id="14382" href="/Equality/#14356" class="Bound">x</a> <a id="14384" class="Symbol">→</a> <a id="14386" href="/Equality/#14365" class="Bound">P</a> <a id="14388" href="/Equality/#14358" class="Bound">y</a></pre>
+<p>One might expect to write the left-hand side of the equation as <code class="highlighter-rouge">x ≐ y</code>,
+but instead we write <code class="highlighter-rouge">_≐_ {A} x y</code> to provide access to the implicit
+parameter <code class="highlighter-rouge">A</code> which appears on the right-hand side.</p>
+
+<p>This is our first use of <em>levels</em>.  We cannot assign <code class="highlighter-rouge">Set</code> the type
+<code class="highlighter-rouge">Set</code>, since this would lead to contradictions such as Russel’s
+Paradox and Girard’s Paradox.  Instead, there is a hierarchy of types,
+where <code class="highlighter-rouge">Set : Set₁</code>, <code class="highlighter-rouge">Set₁ : Set₂</code>, and so on.  In fact, <code class="highlighter-rouge">Set</code> itself
+is just an abbreviation for <code class="highlighter-rouge">Set₀</code>.  Since the equation defining <code class="highlighter-rouge">_≐_</code>
+mentions <code class="highlighter-rouge">Set</code> on the right-hand side, the corresponding signature
+must use <code class="highlighter-rouge">Set₁</code>.  Further information on levels can be found in
+the <a href="http://wiki.portal.chalmers.se/agda/pmwiki.php?n=ReferenceManual.UniversePolymorphism">Agda Wiki</a>.</p>
+
+<p>Leibniz equality is reflexive and transitive,
+where the first follows by a variant of the identity function
+and the second by a variant of function composition.</p>
+<pre class="Agda"><a id="refl-≐"></a><a id="15363" href="/Equality/#15363" class="Function">refl-≐</a> <a id="15370" class="Symbol">:</a> <a id="15372" class="Symbol">∀</a> <a id="15374" class="Symbol">{</a><a id="15375" href="/Equality/#15375" class="Bound">A</a> <a id="15377" class="Symbol">:</a> <a id="15379" class="PrimitiveType">Set</a><a id="15382" class="Symbol">}</a> <a id="15384" class="Symbol">{</a><a id="15385" href="/Equality/#15385" class="Bound">x</a> <a id="15387" class="Symbol">:</a> <a id="15389" href="/Equality/#15375" class="Bound">A</a><a id="15390" class="Symbol">}</a> <a id="15392" class="Symbol">→</a> <a id="15394" href="/Equality/#15385" class="Bound">x</a> <a id="15396" href="/Equality/#14313" class="Function Operator">≐</a> <a id="15398" href="/Equality/#15385" class="Bound">x</a>
+<a id="15400" href="/Equality/#15363" class="Function">refl-≐</a> <a id="15407" href="/Equality/#15407" class="Bound">P</a> <a id="15409" href="/Equality/#15409" class="Bound">Px</a>  <a id="15413" class="Symbol">=</a>  <a id="15416" href="/Equality/#15409" class="Bound">Px</a>
+
+<a id="trans-≐"></a><a id="15420" href="/Equality/#15420" class="Function">trans-≐</a> <a id="15428" class="Symbol">:</a> <a id="15430" class="Symbol">∀</a> <a id="15432" class="Symbol">{</a><a id="15433" href="/Equality/#15433" class="Bound">A</a> <a id="15435" class="Symbol">:</a> <a id="15437" class="PrimitiveType">Set</a><a id="15440" class="Symbol">}</a> <a id="15442" class="Symbol">{</a><a id="15443" href="/Equality/#15443" class="Bound">x</a> <a id="15445" href="/Equality/#15445" class="Bound">y</a> <a id="15447" href="/Equality/#15447" class="Bound">z</a> <a id="15449" class="Symbol">:</a> <a id="15451" href="/Equality/#15433" class="Bound">A</a><a id="15452" class="Symbol">}</a> <a id="15454" class="Symbol">→</a> <a id="15456" href="/Equality/#15443" class="Bound">x</a> <a id="15458" href="/Equality/#14313" class="Function Operator">≐</a> <a id="15460" href="/Equality/#15445" class="Bound">y</a> <a id="15462" class="Symbol">→</a> <a id="15464" href="/Equality/#15445" class="Bound">y</a> <a id="15466" href="/Equality/#14313" class="Function Operator">≐</a> <a id="15468" href="/Equality/#15447" class="Bound">z</a> <a id="15470" class="Symbol">→</a> <a id="15472" href="/Equality/#15443" class="Bound">x</a> <a id="15474" href="/Equality/#14313" class="Function Operator">≐</a> <a id="15476" href="/Equality/#15447" class="Bound">z</a>
+<a id="15478" href="/Equality/#15420" class="Function">trans-≐</a> <a id="15486" href="/Equality/#15486" class="Bound">x≐y</a> <a id="15490" href="/Equality/#15490" class="Bound">y≐z</a> <a id="15494" href="/Equality/#15494" class="Bound">P</a> <a id="15496" href="/Equality/#15496" class="Bound">Px</a>  <a id="15500" class="Symbol">=</a>  <a id="15503" href="/Equality/#15490" class="Bound">y≐z</a> <a id="15507" href="/Equality/#15494" class="Bound">P</a> <a id="15509" class="Symbol">(</a><a id="15510" href="/Equality/#15486" class="Bound">x≐y</a> <a id="15514" href="/Equality/#15494" class="Bound">P</a> <a id="15516" href="/Equality/#15496" class="Bound">Px</a><a id="15518" class="Symbol">)</a></pre>
+
+<p>Symmetry is less obvious.  We have to show that if <code class="highlighter-rouge">P x</code> implies <code class="highlighter-rouge">P y</code>
+for all predicates <code class="highlighter-rouge">P</code>, then the implication holds the other way round
+as well.  Given a specific <code class="highlighter-rouge">P</code> and a proof <code class="highlighter-rouge">Py</code> of <code class="highlighter-rouge">P y</code>, we have to
+construct a proof of <code class="highlighter-rouge">P x</code> given <code class="highlighter-rouge">x ≐ y</code>.  To do so, we instantiate
+the equality with a predicate <code class="highlighter-rouge">Q</code> such that <code class="highlighter-rouge">Q z</code> holds if <code class="highlighter-rouge">P z</code>
+implies <code class="highlighter-rouge">P x</code>.  The property <code class="highlighter-rouge">Q x</code> is trivial by reflexivity, and
+hence <code class="highlighter-rouge">Q y</code> follows from <code class="highlighter-rouge">x ≐ y</code>.  But <code class="highlighter-rouge">Q y</code> is exactly a proof of
+what we require, that <code class="highlighter-rouge">P y</code> implies <code class="highlighter-rouge">P x</code>.</p>
+<pre class="Agda"><a id="sym-≐"></a><a id="16065" href="/Equality/#16065" class="Function">sym-≐</a> <a id="16071" class="Symbol">:</a> <a id="16073" class="Symbol">∀</a> <a id="16075" class="Symbol">{</a><a id="16076" href="/Equality/#16076" class="Bound">A</a> <a id="16078" class="Symbol">:</a> <a id="16080" class="PrimitiveType">Set</a><a id="16083" class="Symbol">}</a> <a id="16085" class="Symbol">{</a><a id="16086" href="/Equality/#16086" class="Bound">x</a> <a id="16088" href="/Equality/#16088" class="Bound">y</a> <a id="16090" class="Symbol">:</a> <a id="16092" href="/Equality/#16076" class="Bound">A</a><a id="16093" class="Symbol">}</a> <a id="16095" class="Symbol">→</a> <a id="16097" href="/Equality/#16086" class="Bound">x</a> <a id="16099" href="/Equality/#14313" class="Function Operator">≐</a> <a id="16101" href="/Equality/#16088" class="Bound">y</a> <a id="16103" class="Symbol">→</a> <a id="16105" href="/Equality/#16088" class="Bound">y</a> <a id="16107" href="/Equality/#14313" class="Function Operator">≐</a> <a id="16109" href="/Equality/#16086" class="Bound">x</a>
+<a id="16111" href="/Equality/#16065" class="Function">sym-≐</a> <a id="16117" class="Symbol">{</a><a id="16118" href="/Equality/#16118" class="Bound">A</a><a id="16119" class="Symbol">}</a> <a id="16121" class="Symbol">{</a><a id="16122" href="/Equality/#16122" class="Bound">x</a><a id="16123" class="Symbol">}</a> <a id="16125" class="Symbol">{</a><a id="16126" href="/Equality/#16126" class="Bound">y</a><a id="16127" class="Symbol">}</a> <a id="16129" href="/Equality/#16129" class="Bound">x≐y</a> <a id="16133" href="/Equality/#16133" class="Bound">P</a>  <a id="16136" class="Symbol">=</a>  <a id="16139" href="/Equality/#16221" class="Function">Qy</a>
+  <a id="16144" class="Keyword">where</a>
+    <a id="16154" href="/Equality/#16154" class="Function">Q</a> <a id="16156" class="Symbol">:</a> <a id="16158" href="/Equality/#16118" class="Bound">A</a> <a id="16160" class="Symbol">→</a> <a id="16162" class="PrimitiveType">Set</a>
+    <a id="16170" href="/Equality/#16154" class="Function">Q</a> <a id="16172" href="/Equality/#16172" class="Bound">z</a> <a id="16174" class="Symbol">=</a> <a id="16176" href="/Equality/#16133" class="Bound">P</a> <a id="16178" href="/Equality/#16172" class="Bound">z</a> <a id="16180" class="Symbol">→</a> <a id="16182" href="/Equality/#16133" class="Bound">P</a> <a id="16184" href="/Equality/#16122" class="Bound">x</a>
+    <a id="16190" href="/Equality/#16190" class="Function">Qx</a> <a id="16193" class="Symbol">:</a> <a id="16195" href="/Equality/#16154" class="Function">Q</a> <a id="16197" href="/Equality/#16122" class="Bound">x</a>
+    <a id="16203" href="/Equality/#16190" class="Function">Qx</a> <a id="16206" class="Symbol">=</a> <a id="16208" href="/Equality/#15363" class="Function">refl-≐</a> <a id="16215" href="/Equality/#16133" class="Bound">P</a>
+    <a id="16221" href="/Equality/#16221" class="Function">Qy</a> <a id="16224" class="Symbol">:</a> <a id="16226" href="/Equality/#16154" class="Function">Q</a> <a id="16228" href="/Equality/#16126" class="Bound">y</a>
+    <a id="16234" href="/Equality/#16221" class="Function">Qy</a> <a id="16237" class="Symbol">=</a> <a id="16239" href="/Equality/#16129" class="Bound">x≐y</a> <a id="16243" href="/Equality/#16154" class="Function">Q</a> <a id="16245" href="/Equality/#16190" class="Function">Qx</a></pre>
+
+<p>We now show that Martin Löf equivalence implies
+Leibniz equality, and vice versa.  In the forward direction, if we know
+<code class="highlighter-rouge">x ≡ y</code> we need for any <code class="highlighter-rouge">P</code> to take evidence of <code class="highlighter-rouge">P x</code> to evidence of <code class="highlighter-rouge">P y</code>,
+which is easy since equivalence of <code class="highlighter-rouge">x</code> and <code class="highlighter-rouge">y</code> implies that any proof
+of <code class="highlighter-rouge">P x</code> is also a proof of <code class="highlighter-rouge">P y</code>.</p>
+<pre class="Agda"><a id="≡-implies-≐"></a><a id="16574" href="/Equality/#16574" class="Function">≡-implies-≐</a> <a id="16586" class="Symbol">:</a> <a id="16588" class="Symbol">∀</a> <a id="16590" class="Symbol">{</a><a id="16591" href="/Equality/#16591" class="Bound">A</a> <a id="16593" class="Symbol">:</a> <a id="16595" class="PrimitiveType">Set</a><a id="16598" class="Symbol">}</a> <a id="16600" class="Symbol">{</a><a id="16601" href="/Equality/#16601" class="Bound">x</a> <a id="16603" href="/Equality/#16603" class="Bound">y</a> <a id="16605" class="Symbol">:</a> <a id="16607" href="/Equality/#16591" class="Bound">A</a><a id="16608" class="Symbol">}</a> <a id="16610" class="Symbol">→</a> <a id="16612" href="/Equality/#16601" class="Bound">x</a> <a id="16614" href="/Equality/#683" class="Datatype Operator">≡</a> <a id="16616" href="/Equality/#16603" class="Bound">y</a> <a id="16618" class="Symbol">→</a> <a id="16620" href="/Equality/#16601" class="Bound">x</a> <a id="16622" href="/Equality/#14313" class="Function Operator">≐</a> <a id="16624" href="/Equality/#16603" class="Bound">y</a>
+<a id="16626" href="/Equality/#16574" class="Function">≡-implies-≐</a> <a id="16638" href="/Equality/#16638" class="Bound">x≡y</a> <a id="16642" href="/Equality/#16642" class="Bound">P</a> <a id="16644" class="Symbol">=</a> <a id="16646" href="/Equality/#4675" class="Function">subst</a> <a id="16652" href="/Equality/#16642" class="Bound">P</a> <a id="16654" href="/Equality/#16638" class="Bound">x≡y</a></pre>
+<p>This direction follows from substitution, which we showed earlier.</p>
+
+<p>In the reverse direction, given that for any <code class="highlighter-rouge">P</code> we can take a proof of <code class="highlighter-rouge">P x</code>
+to a proof of <code class="highlighter-rouge">P y</code> we need to show <code class="highlighter-rouge">x ≡ y</code>. The proof is similar to that
+for symmetry of Leibniz equality. We take <code class="highlighter-rouge">Q</code>
+to be the predicate that holds of <code class="highlighter-rouge">z</code> if <code class="highlighter-rouge">x ≡ z</code>. Then <code class="highlighter-rouge">Q x</code> is trivial
+by reflexivity of Martin Löf equivalence, and hence <code class="highlighter-rouge">Q y</code> follows from
+<code class="highlighter-rouge">x ≐ y</code>.  But <code class="highlighter-rouge">Q y</code> is exactly a proof of what we require, that <code class="highlighter-rouge">x ≡ y</code>.</p>
+<pre class="Agda"><a id="≐-implies-≡"></a><a id="17164" href="/Equality/#17164" class="Function">≐-implies-≡</a> <a id="17176" class="Symbol">:</a> <a id="17178" class="Symbol">∀</a> <a id="17180" class="Symbol">{</a><a id="17181" href="/Equality/#17181" class="Bound">A</a> <a id="17183" class="Symbol">:</a> <a id="17185" class="PrimitiveType">Set</a><a id="17188" class="Symbol">}</a> <a id="17190" class="Symbol">{</a><a id="17191" href="/Equality/#17191" class="Bound">x</a> <a id="17193" href="/Equality/#17193" class="Bound">y</a> <a id="17195" class="Symbol">:</a> <a id="17197" href="/Equality/#17181" class="Bound">A</a><a id="17198" class="Symbol">}</a> <a id="17200" class="Symbol">→</a> <a id="17202" href="/Equality/#17191" class="Bound">x</a> <a id="17204" href="/Equality/#14313" class="Function Operator">≐</a> <a id="17206" href="/Equality/#17193" class="Bound">y</a> <a id="17208" class="Symbol">→</a> <a id="17210" href="/Equality/#17191" class="Bound">x</a> <a id="17212" href="/Equality/#683" class="Datatype Operator">≡</a> <a id="17214" href="/Equality/#17193" class="Bound">y</a>
+<a id="17216" href="/Equality/#17164" class="Function">≐-implies-≡</a> <a id="17228" class="Symbol">{</a><a id="17229" href="/Equality/#17229" class="Bound">A</a><a id="17230" class="Symbol">}</a> <a id="17232" class="Symbol">{</a><a id="17233" href="/Equality/#17233" class="Bound">x</a><a id="17234" class="Symbol">}</a> <a id="17236" class="Symbol">{</a><a id="17237" href="/Equality/#17237" class="Bound">y</a><a id="17238" class="Symbol">}</a> <a id="17240" href="/Equality/#17240" class="Bound">x≐y</a> <a id="17244" class="Symbol">=</a> <a id="17246" href="/Equality/#17320" class="Function">Qy</a>
+  <a id="17251" class="Keyword">where</a>
+    <a id="17261" href="/Equality/#17261" class="Function">Q</a> <a id="17263" class="Symbol">:</a> <a id="17265" href="/Equality/#17229" class="Bound">A</a> <a id="17267" class="Symbol">→</a> <a id="17269" class="PrimitiveType">Set</a>
+    <a id="17277" href="/Equality/#17261" class="Function">Q</a> <a id="17279" href="/Equality/#17279" class="Bound">z</a> <a id="17281" class="Symbol">=</a> <a id="17283" href="/Equality/#17233" class="Bound">x</a> <a id="17285" href="/Equality/#683" class="Datatype Operator">≡</a> <a id="17287" href="/Equality/#17279" class="Bound">z</a>
+    <a id="17293" href="/Equality/#17293" class="Function">Qx</a> <a id="17296" class="Symbol">:</a> <a id="17298" href="/Equality/#17261" class="Function">Q</a> <a id="17300" href="/Equality/#17233" class="Bound">x</a>
+    <a id="17306" href="/Equality/#17293" class="Function">Qx</a> <a id="17309" class="Symbol">=</a> <a id="17311" href="/Equality/#723" class="InductiveConstructor">refl</a>
+    <a id="17320" href="/Equality/#17320" class="Function">Qy</a> <a id="17323" class="Symbol">:</a> <a id="17325" href="/Equality/#17261" class="Function">Q</a> <a id="17327" href="/Equality/#17237" class="Bound">y</a>
+    <a id="17333" href="/Equality/#17320" class="Function">Qy</a> <a id="17336" class="Symbol">=</a> <a id="17338" href="/Equality/#17240" class="Bound">x≐y</a> <a id="17342" href="/Equality/#17261" class="Function">Q</a> <a id="17344" href="/Equality/#17293" class="Function">Qx</a></pre>
+
+<p>(Parts of this section are adapted from <em>≐≃≡: Leibniz Equality is
+Isomorphic to Martin-Löf Identity, Parametrically</em>, by Andreas Abel,
+Jesper Cockx, Dominique Devries, Andreas Nuyts, and Philip Wadler,
+draft paper, 2017.)</p>
+
+<h2 id="unipoly">Universe polymorphism</h2>
+
+<p>As we have seen, not every type belongs to <code class="highlighter-rouge">Set</code>, but instead every
+type belongs somewhere in the hierarchy <code class="highlighter-rouge">Set₀</code>, <code class="highlighter-rouge">Set₁</code>, <code class="highlighter-rouge">Set₂</code>, and so on,
+where <code class="highlighter-rouge">Set</code> abbreviates <code class="highlighter-rouge">Set₀</code>, and <code class="highlighter-rouge">Set₀ : Set₁</code>, <code class="highlighter-rouge">Set₁ : Set₂</code>, and so on.
+The definition of equality given above is fine if we want to compare two
+values of a type that belongs to <code class="highlighter-rouge">Set</code>, but what if we want to compare
+two values of a type that belongs to <code class="highlighter-rouge">Set ℓ</code> for some arbitrary level <code class="highlighter-rouge">ℓ</code>?</p>
+
+<p>The answer is <em>universe polymorphism</em>, where a definition is made
+with respect to an arbitrary level <code class="highlighter-rouge">ℓ</code>. To make use of levels, we
+first import the following.</p>
+<pre class="Agda"><a id="18233" class="Keyword">open</a> <a id="18238" class="Keyword">import</a> <a id="18245" href="https://agda.github.io/agda-stdlib/Level.html" class="Module">Level</a> <a id="18251" class="Keyword">using</a> <a id="18257" class="Symbol">(</a><a id="18258" href="https://agda.github.io/agda-stdlib/Agda.Primitive.html#408" class="Postulate">Level</a><a id="18263" class="Symbol">;</a> <a id="18265" href="https://agda.github.io/agda-stdlib/Agda.Primitive.html#657" class="Primitive Operator">_⊔_</a><a id="18268" class="Symbol">)</a> <a id="18270" class="Keyword">renaming</a> <a id="18279" class="Symbol">(</a><a id="18280" href="https://agda.github.io/agda-stdlib/Agda.Primitive.html#627" class="Primitive">suc</a> <a id="18284" class="Symbol">to</a> <a id="18287" href="https://agda.github.io/agda-stdlib/Agda.Primitive.html#627" class="Primitive">lsuc</a><a id="18291" class="Symbol">;</a> <a id="18293" href="https://agda.github.io/agda-stdlib/Agda.Primitive.html#611" class="Primitive">zero</a> <a id="18298" class="Symbol">to</a> <a id="18301" href="https://agda.github.io/agda-stdlib/Agda.Primitive.html#611" class="Primitive">lzero</a><a id="18306" class="Symbol">)</a></pre>
+<p>Levels are isomorphic to natural numbers, and have similar constructors:</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>lzero : Level
+lsuc  : Level → Level
+</code></pre></div></div>
+
+<p>The names <code class="highlighter-rouge">Set₀</code>, <code class="highlighter-rouge">Set₁</code>, <code class="highlighter-rouge">Set₂</code> and so on are abbreviations for</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>Set lzero
+Set (lsuc lzero)
+Set (lsuc (lsuc lzero))
+</code></pre></div></div>
+
+<p>and so on. There is also an operator</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>_⊔_ : Level → Level → Level
+</code></pre></div></div>
+
+<p>that given two levels returns the larger of the two.</p>
+
+<p>Here is the definition of equality, generalised to an arbitrary level.</p>
+<pre class="Agda"><a id="18777" class="Keyword">data</a> <a id="_≡′_"></a><a id="18782" href="/Equality/#18782" class="Datatype Operator">_≡′_</a> <a id="18787" class="Symbol">{</a><a id="18788" href="/Equality/#18788" class="Bound">ℓ</a> <a id="18790" class="Symbol">:</a> <a id="18792" href="https://agda.github.io/agda-stdlib/Agda.Primitive.html#408" class="Postulate">Level</a><a id="18797" class="Symbol">}</a> <a id="18799" class="Symbol">{</a><a id="18800" href="/Equality/#18800" class="Bound">A</a> <a id="18802" class="Symbol">:</a> <a id="18804" class="PrimitiveType">Set</a> <a id="18808" href="/Equality/#18788" class="Bound">ℓ</a><a id="18809" class="Symbol">}</a> <a id="18811" class="Symbol">:</a> <a id="18813" href="/Equality/#18800" class="Bound">A</a> <a id="18815" class="Symbol">→</a> <a id="18817" href="/Equality/#18800" class="Bound">A</a> <a id="18819" class="Symbol">→</a> <a id="18821" class="PrimitiveType">Set</a> <a id="18825" href="/Equality/#18788" class="Bound">ℓ</a> <a id="18827" class="Keyword">where</a>
+  <a id="_≡′_.refl′"></a><a id="18835" href="/Equality/#18835" class="InductiveConstructor">refl′</a> <a id="18841" class="Symbol">:</a> <a id="18843" class="Symbol">∀</a> <a id="18845" class="Symbol">{</a><a id="18846" href="/Equality/#18846" class="Bound">x</a> <a id="18848" class="Symbol">:</a> <a id="18850" href="/Equality/#18800" class="Bound">A</a><a id="18851" class="Symbol">}</a> <a id="18853" class="Symbol">→</a> <a id="18855" href="/Equality/#18846" class="Bound">x</a> <a id="18857" href="/Equality/#18782" class="Datatype Operator">≡′</a> <a id="18860" href="/Equality/#18846" class="Bound">x</a></pre>
+<p>Similarly, here is the generalised definition of symmetry.</p>
+<pre class="Agda"><a id="sym′"></a><a id="18945" href="/Equality/#18945" class="Function">sym′</a> <a id="18950" class="Symbol">:</a> <a id="18952" class="Symbol">∀</a> <a id="18954" class="Symbol">{</a><a id="18955" href="/Equality/#18955" class="Bound">ℓ</a> <a id="18957" class="Symbol">:</a> <a id="18959" href="https://agda.github.io/agda-stdlib/Agda.Primitive.html#408" class="Postulate">Level</a><a id="18964" class="Symbol">}</a> <a id="18966" class="Symbol">{</a><a id="18967" href="/Equality/#18967" class="Bound">A</a> <a id="18969" class="Symbol">:</a> <a id="18971" class="PrimitiveType">Set</a> <a id="18975" href="/Equality/#18955" class="Bound">ℓ</a><a id="18976" class="Symbol">}</a> <a id="18978" class="Symbol">{</a><a id="18979" href="/Equality/#18979" class="Bound">x</a> <a id="18981" href="/Equality/#18981" class="Bound">y</a> <a id="18983" class="Symbol">:</a> <a id="18985" href="/Equality/#18967" class="Bound">A</a><a id="18986" class="Symbol">}</a> <a id="18988" class="Symbol">→</a>  <a id="18991" href="/Equality/#18979" class="Bound">x</a> <a id="18993" href="/Equality/#18782" class="Datatype Operator">≡′</a> <a id="18996" href="/Equality/#18981" class="Bound">y</a> <a id="18998" class="Symbol">→</a> <a id="19000" href="/Equality/#18981" class="Bound">y</a> <a id="19002" href="/Equality/#18782" class="Datatype Operator">≡′</a> <a id="19005" href="/Equality/#18979" class="Bound">x</a>
+<a id="19007" href="/Equality/#18945" class="Function">sym′</a> <a id="19012" href="/Equality/#18835" class="InductiveConstructor">refl′</a> <a id="19018" class="Symbol">=</a> <a id="19020" href="/Equality/#18835" class="InductiveConstructor">refl′</a></pre>
+<p>For simplicity, we avoid universe polymorphism in the definitions given in
+the text, but most definitions in the standard library, including those for
+equality, are generalised to arbitrary levels as above.</p>
+
+<p>Here is the generalised definition of Leibniz equality.</p>
+<pre class="Agda"><a id="_≐′_"></a><a id="19314" href="/Equality/#19314" class="Function Operator">_≐′_</a> <a id="19319" class="Symbol">:</a> <a id="19321" class="Symbol">∀</a> <a id="19323" class="Symbol">{</a><a id="19324" href="/Equality/#19324" class="Bound">ℓ</a> <a id="19326" class="Symbol">:</a> <a id="19328" href="https://agda.github.io/agda-stdlib/Agda.Primitive.html#408" class="Postulate">Level</a><a id="19333" class="Symbol">}</a> <a id="19335" class="Symbol">{</a><a id="19336" href="/Equality/#19336" class="Bound">A</a> <a id="19338" class="Symbol">:</a> <a id="19340" class="PrimitiveType">Set</a> <a id="19344" href="/Equality/#19324" class="Bound">ℓ</a><a id="19345" class="Symbol">}</a> <a id="19347" class="Symbol">(</a><a id="19348" href="/Equality/#19348" class="Bound">x</a> <a id="19350" href="/Equality/#19350" class="Bound">y</a> <a id="19352" class="Symbol">:</a> <a id="19354" href="/Equality/#19336" class="Bound">A</a><a id="19355" class="Symbol">)</a> <a id="19357" class="Symbol">→</a> <a id="19359" class="PrimitiveType">Set</a> <a id="19363" class="Symbol">(</a><a id="19364" href="https://agda.github.io/agda-stdlib/Agda.Primitive.html#627" class="Primitive">lsuc</a> <a id="19369" href="/Equality/#19324" class="Bound">ℓ</a><a id="19370" class="Symbol">)</a>
+<a id="19372" href="/Equality/#19314" class="Function Operator">_≐′_</a> <a id="19377" class="Symbol">{</a><a id="19378" href="/Equality/#19378" class="Bound">ℓ</a><a id="19379" class="Symbol">}</a> <a id="19381" class="Symbol">{</a><a id="19382" href="/Equality/#19382" class="Bound">A</a><a id="19383" class="Symbol">}</a> <a id="19385" href="/Equality/#19385" class="Bound">x</a> <a id="19387" href="/Equality/#19387" class="Bound">y</a> <a id="19389" class="Symbol">=</a> <a id="19391" class="Symbol">∀</a> <a id="19393" class="Symbol">(</a><a id="19394" href="/Equality/#19394" class="Bound">P</a> <a id="19396" class="Symbol">:</a> <a id="19398" href="/Equality/#19382" class="Bound">A</a> <a id="19400" class="Symbol">→</a> <a id="19402" class="PrimitiveType">Set</a> <a id="19406" href="/Equality/#19378" class="Bound">ℓ</a><a id="19407" class="Symbol">)</a> <a id="19409" class="Symbol">→</a> <a id="19411" href="/Equality/#19394" class="Bound">P</a> <a id="19413" href="/Equality/#19385" class="Bound">x</a> <a id="19415" class="Symbol">→</a> <a id="19417" href="/Equality/#19394" class="Bound">P</a> <a id="19419" href="/Equality/#19387" class="Bound">y</a></pre>
+<p>Before the signature used <code class="highlighter-rouge">Set₁</code> as the type of a term that includes
+<code class="highlighter-rouge">Set</code>, whereas here the signature uses <code class="highlighter-rouge">Set (suc ℓ)</code> as the type of a
+term that includes <code class="highlighter-rouge">Set ℓ</code>.</p>
+
+<h2 id="standard-library">Standard library</h2>
+
+<p>Definitions similar to those in this chapter can be found in the standard library.</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>import Relation.Binary.PropositionalEquality as Eq
+open Eq using (_≡_; refl; trans; sym; cong; cong-app; subst)
+open Eq.≡-Reasoning using (begin_; _≡⟨⟩_; _≡⟨_⟩_; _∎)
+</code></pre></div></div>
+
+<p>Here the import is shown as comment rather than code to avoid collisions,
+as mentioned in the introduction.</p>
+
+<h2 id="unicode">Unicode</h2>
+
+<p>This chapter uses the following unicode.</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>≡  U+2261  IDENTICAL TO (\==)
+⟨  U+27E8  MATHEMATICAL LEFT ANGLE BRACKET (\&lt;)
+⟩  U+27E9  MATHEMATICAL RIGHT ANGLE BRACKET (\&gt;)
+∎  U+220E  END OF PROOF (\qed)
+≐  U+2250  APPROACHES THE LIMIT (\.=)
+ℓ  U+2113  SCRIPT SMALL L (\ell)
+</code></pre></div></div>
+
+  </div>
+
+</article>
+
+      </div>
+    </main><footer class="site-footer h-card">
+  <data class="u-url" href="/"></data>
+
+  <div class="wrapper">
+
+    <h2 class="footer-heading">Programming Language Foundations in Agda
+</h2><div class="footer-col-wrapper">
+      <div class="footer-col footer-col-1">
+        <ul class="contact-list">
+          <li class="p-name">Wen Kokke</li><li><a class="u-email" href="mailto:wen.kokke@ed.ac.uk">wen.kokke@ed.ac.uk</a></li></ul>
+      </div>
+
+      <div class="footer-col footer-col-2"><ul class="social-media-list"><li><a href="https://github.com/wenkokke"><svg class="svg-icon"><use xlink:href="/assets/minima-social-icons.svg#github"></use></svg> <span class="username">wenkokke</span></a></li><li><a href="https://www.twitter.com/wenkokke"><svg class="svg-icon"><use xlink:href="/assets/minima-social-icons.svg#twitter"></use></svg> <span class="username">wenkokke</span></a></li></ul>
+</div>
+
+      <div class="footer-col footer-col-3"></div>
+    </div><div class="footer-col-wrapper">
+      <div class="footer-col footer-col-1">
+        <ul class="contact-list">
+          <li class="p-name">Philip Wadler</li><li><a class="u-email" href="mailto:wadler@inf.ed.ac.uk">wadler@inf.ed.ac.uk</a></li></ul>
+      </div>
+
+      <div class="footer-col footer-col-2"><ul class="social-media-list"><li><a href="https://github.com/wadler"><svg class="svg-icon"><use xlink:href="/assets/minima-social-icons.svg#github"></use></svg> <span class="username">wadler</span></a></li><li><a href="https://www.twitter.com/philipwadler"><svg class="svg-icon"><use xlink:href="/assets/minima-social-icons.svg#twitter"></use></svg> <span class="username">philipwadler</span></a></li></ul>
+</div>
+
+      <div class="footer-col footer-col-3"></div>
+    </div></div>
+
+</footer>
+<!-- Import jQuery -->
+<script type="text/javascript" src="/assets/jquery.js"></script>
+
+<!-- Script which allows for foldable code blocks -->
+<script type="text/javascript">
+ $('div.foldable pre').each(function(){
+     var autoHeight = $(this).height();
+     var lineHeight = parseFloat($(this).css('line-height'));
+
+     var plus    = $("<div></div>");
+     var horLine = $("<div></div>");
+     var verLine = $("<div></div>");
+     $(this).prepend(plus);
+     plus.css({
+         'position'         : 'relative',
+         'float'            : 'right',
+         'right'            : '-' + (0.5 * lineHeight - 1.5) + 'px',
+         'width'            : lineHeight,
+         'height'           : lineHeight});
+     verLine.css({
+         'position'         : 'relative',
+         'height'           : lineHeight,
+         'width'            : '3px',
+         'background-color' : '#C1E0FF'});
+     horLine.css({
+         'position'         : 'relative',
+         'top'              : '-' + (0.5 * lineHeight + 1.5) + 'px',
+         'left'             : '-' + (0.5 * lineHeight - 1.5) + 'px',
+         'height'           : '3px',
+         'width'            : lineHeight,
+         'background-color' : '#C1E0FF'});
+     plus.append(verLine);
+     plus.append(horLine);
+
+     $(this).height(2.0 * lineHeight);
+     $(this).css('overflow','hidden');
+
+     $(this).click(function(){
+         if ($(this).height() == autoHeight) {
+             $(this).height(2.0 * lineHeight);
+             plus.show();
+         }
+         else {
+             $(this).height('auto');
+             plus.hide();
+         }
+     });
+ });
+</script>
+
+<!-- Import KaTeX -->
+<script type="text/javascript" src="/assets/katex.js"></script>
+
+<!-- Script which renders TeX using KaTeX -->
+<script type="text/javascript">
+ $("script[type='math/tex']").replaceWith(
+     function(){
+         var tex = $(this).text();
+         return "<span class=\"inline-equation\">" +
+                katex.renderToString(tex) +
+                "</span>";
+     });
+ $("script[type='math/tex; mode=display']").replaceWith(
+     function(){
+         var tex = $(this).text().replace(/%.*?(\n|$)/g,"");
+         return "<div class=\"equation\">" +
+                katex.renderToString("\\displaystyle "+tex) +
+                "</div>";
+     });
+</script>
+</body>
+
+</html>
